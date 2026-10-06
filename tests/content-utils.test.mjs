@@ -3,11 +3,12 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { formatText, plainText } from "../app/lib/format-text.ts";
+import { firstSentence, formatText, plainText } from "../app/lib/format-text.ts";
 import {
   formatMonth,
   isVisible,
   loadSettings,
+  loadResearch,
   loadProfessorPublications,
   loadPublications,
   normalizeNews,
@@ -44,6 +45,21 @@ test("renders inline bold safely and removes markers from plain-text attributes"
   assert.equal(plainText("**Unclosed"), "**Unclosed");
 });
 
+test("Home summaries stop after the first sentence and retain inline bold", () => {
+  for (const [text, expected] of [
+    ["   ", ""],
+    ["One summary without punctuation", "One summary without punctuation"],
+    [" First sentence. Second sentence. ", "First sentence."],
+    ["First question? Another sentence!", "First question?"],
+    ["첫 문장입니다. 두 번째 문장입니다.", "첫 문장입니다."],
+    ["最初の文です。次の文です。", "最初の文です。"],
+    ["Value is 3.14. More details.", "Value is 3.14."],
+    ["First **bold sentence.** More details.", "First **bold sentence.**"],
+    ["**First sentence. Second sentence.**", "**First sentence.**"],
+  ]) assert.equal(firstSentence(text), expected);
+  assert.equal(renderToStaticMarkup(createElement("p", null, formatText(firstSentence("**First sentence. Second sentence.**")))), "<p><strong>First sentence.</strong></p>");
+});
+
 test("renders inline links and bold safely, including the supplied publication citation", () => {
   const link = (label, href) => `<a href="${href}" target="_blank" rel="noreferrer noopener">${label}</a>`;
   const cases = [
@@ -71,6 +87,41 @@ test("renders inline links and bold safely, including the supplied publication c
 test("parses Google Visualization rows using row-one headers", () => {
   const source = 'google.visualization.Query.setResponse({"status":"ok","table":{"cols":[{"label":"Display Order"},{"label":"Name"}],"rows":[{"c":[{"v":2},{"v":"Ada"}]}]}});';
   assert.deepEqual(parseGvizResponse(source), [{ display_order: 2, name: "Ada" }]);
+});
+
+test("loads shared Research and Home card content with ordering, visibility, and safe images", async () => {
+  const previousSheetId = process.env.GOOGLE_SHEET_ID;
+  const previousFetch = globalThis.fetch;
+  process.env.GOOGLE_SHEET_ID = "sheet-id";
+  globalThis.fetch = async (url) => {
+    assert.equal(new URL(url).searchParams.get("sheet"), "Research");
+    const headers = ["display_order", "title", "summary", "image_url", "image_alt", "visible"];
+    const rows = [
+      [2, "Second", "Description", "javascript:alert(1)", "Second image", true],
+      [1, "**First**", "First description", "https://example.com/first.jpg", "First image", true],
+      [0, "Hidden", "", "", "", false],
+      [0, "", "No title", "", "", true],
+    ];
+    return new Response("google.visualization.Query.setResponse(" + JSON.stringify({
+      status: "ok",
+      table: {
+        cols: headers.map((label) => ({ label })),
+        rows: rows.map((row) => ({ c: row.map((v) => ({ v })) })),
+      },
+    }) + ");");
+  };
+  try {
+    const result = await loadResearch();
+    assert.equal(result.demo, false);
+    assert.deepEqual(result.data.map((card) => card.title), ["**First**", "Second"]);
+    assert.equal(result.data[0].summary, "First description");
+    assert.equal(result.data[0].image_url, "https://example.com/first.jpg");
+    assert.equal(result.data[1].image_url, "");
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (previousSheetId === undefined) delete process.env.GOOGLE_SHEET_ID;
+    else process.env.GOOGLE_SHEET_ID = previousSheetId;
+  }
 });
 
 test("formats Google date values and sorts visible news newest first", () => {

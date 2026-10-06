@@ -29,7 +29,7 @@ before(async () => {
     ["node_modules/next/dist/bin/next", "start", "--hostname", "127.0.0.1", "--port", String(port)],
     {
       cwd: root,
-      env: { ...process.env, GOOGLE_SHEET_ID: "" },
+      env: { ...process.env, GOOGLE_SHEET_ID: "", DATABASE_URL: "", CONTENT_SOURCE: "sample" },
       stdio: ["ignore", "pipe", "pipe"],
     },
   );
@@ -66,6 +66,7 @@ const routes = [
   ["/members/alumni", "Alumni Example 01"],
   ["/research", "Human-Centered AI"],
   ["/publications", "Example Paper"],
+  ["/blog", "No blog posts yet"],
 ];
 
 for (const [pathname, expected] of routes) {
@@ -88,6 +89,48 @@ test("alumni renders without profile images", async () => {
   const response = await fetch(baseUrl + "/members/alumni");
   const html = await response.text();
   assert.doesNotMatch(html, /member-image|portrait/i);
+});
+
+test("Home cards link to matching Research sections and share their titles, summaries, and images", async () => {
+  const [html, researchHtml] = await Promise.all(
+    ["/", "/research"].map(async (pathname) => (await fetch(baseUrl + pathname)).text()),
+  );
+  const cards = [...html.matchAll(/<a[^>]*class="home-card"[^>]*>([\s\S]*?)<\/a>/g)];
+  const research = [...researchHtml.matchAll(/<article[^>]*class="research-item[^"]*"[^>]*>([\s\S]*?)<\/article>/g)];
+  assert.equal(cards.length, 3);
+  for (const [index, card] of cards.entries()) {
+    const target = card[0].match(/href="\/research#([^"]+)"/)?.[1];
+    assert.ok(target);
+    assert.equal(research[index][0].match(/id="([^"]+)"/)?.[1], target);
+    assert.equal(research.filter((item) => item[0].includes(`id="${target}"`)).length, 1);
+    assert.match(card[1], /class="content-image"/);
+    assert.match(card[1], /<h2>.+<\/h2><p>.+<\/p>/);
+    assert.equal(card[1].match(/<h2>(.*?)<\/h2>/)?.[1], research[index][1].match(/<h2>(.*?)<\/h2>/)?.[1]);
+    assert.equal(card[1].match(/<p>(.*?)<\/p>/)?.[1], research[index][1].match(/<p class="summary">(.*?)<\/p>/)?.[1]);
+    assert.equal(card[1].match(/<img[^>]*src="([^"]+)"/)?.[1], research[index][1].match(/<img[^>]*src="([^"]+)"/)?.[1]);
+  }
+});
+
+test("Admin pages and APIs block framing and send defensive browser headers", async () => {
+  for (const [path, status] of [["/admin", 200], ["/admin/preview/missing-post", 404], ["/api/admin/content/News", 401]]) {
+    const response = await fetch(baseUrl + path);
+    assert.equal(response.status, status);
+    assert.equal(response.headers.get("x-frame-options"), "DENY");
+    assert.match(response.headers.get("content-security-policy"), /frame-ancestors 'none'/);
+    assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+    assert.equal(response.headers.get("referrer-policy"), "same-origin");
+  }
+});
+
+test("Home shows the recent blog section and a More link when there are no published posts", async () => {
+  const html = await (await fetch(baseUrl + "/")).text();
+  assert.match(html, /<aside class="home-blog" aria-labelledby="home-blog-title">/);
+  assert.match(html, /<h2 id="home-blog-title">Latest blog posts<\/h2>/);
+  assert.match(html, /No blog posts yet\./);
+  const moreLink = html.match(/<a[^>]*class="home-blog-more"[^>]*>/)?.[0] ?? "";
+  assert.match(moreLink, /href="\/blog"/);
+  assert.match(moreLink, /aria-label="More blog posts"/);
+  assert.doesNotMatch(html, /class="home-blog-item"/);
 });
 
 test("professor publications render as a numbered citation list with inline bold and links", async () => {

@@ -21,6 +21,7 @@ import type {
   SheetRow,
   Student,
 } from "./types.ts";
+import { contentUrl, DEFAULT_STUDENT_PHOTO_URL, type ContentTab } from "./content-schema.ts";
 
 type GvizCell = { v?: unknown; f?: string } | null;
 type GvizPayload = {
@@ -37,6 +38,7 @@ const settingsKeys = new Set<keyof Settings>([
   "tagline",
   "introduction",
   "hero_image_url",
+  "hero_image_alt",
   "affiliation",
   "contact_email",
   "address",
@@ -94,16 +96,7 @@ export function isVisible(value: unknown) {
 }
 
 export function safeUrl(value: unknown, allowMailto = true) {
-  const input = asText(value);
-  if (!input) return "";
-  try {
-    const url = new URL(input);
-    return ["https:", "http:", ...(allowMailto ? ["mailto:"] : [])].includes(url.protocol)
-      ? input
-      : "";
-  } catch {
-    return "";
-  }
+  return contentUrl(asText(value), allowMailto);
 }
 
 function safeEmail(value: unknown) {
@@ -157,18 +150,19 @@ export function normalizeSettings(rows: SheetRow[]): Settings {
 
 export function normalizeNews(rows: SheetRow[]): NewsItem[] {
   return visibleRows(rows)
+    .sort((a, b) => {
+      const order = asOrder(asText(a.display_order) || undefined) - asOrder(asText(b.display_order) || undefined);
+      const aTime = parseSheetDate(a.month)?.getTime() ?? 0;
+      const bTime = parseSheetDate(b.month)?.getTime() ?? 0;
+      return order || bTime - aTime;
+    })
     .map((row) => ({
       month: asText(row.month),
       content: asText(row.content),
       link_label: asText(row.link_label),
       link_url: safeUrl(row.link_url),
     }))
-    .filter((item) => item.content)
-    .sort((a, b) => {
-      const aTime = parseSheetDate(a.month)?.getTime() ?? 0;
-      const bTime = parseSheetDate(b.month)?.getTime() ?? 0;
-      return bTime - aTime;
-    });
+    .filter((item) => item.content);
 }
 
 export function normalizeProfessor(rows: SheetRow[]): Professor {
@@ -203,15 +197,15 @@ export function normalizeProfessorDetails(rows: SheetRow[]): ProfessorDetail[] {
   );
 }
 
-export function normalizeStudents(rows: SheetRow[]): Student[] {
-  const groupOrder = new Map<string, number>();
+export function normalizeStudents(rows: SheetRow[], options?: string[] | null): Student[] {
+  const groupOrder = new Map((options ?? []).map((name, index) => [name, index]));
   const students = visibleRows(rows)
     .map((row) => ({
       group: asText(row.group),
       display_order: asOrder(row.display_order),
       name: asText(row.name),
       secondary_name: asText(row.secondary_name),
-      photo_url: safeUrl(row.photo_url, false),
+      photo_url: safeUrl(row.photo_url, false) || DEFAULT_STUDENT_PHOTO_URL,
       status: asText(row.status),
       affiliation: asText(row.affiliation),
       email: safeEmail(row.email),
@@ -266,8 +260,8 @@ export function normalizeResearch(rows: SheetRow[]): ResearchItem[] {
   );
 }
 
-export function normalizePublications(rows: SheetRow[]): Publication[] {
-  const categoryOrder = new Map<string, number>();
+export function normalizePublications(rows: SheetRow[], options?: string[] | null): Publication[] {
+  const categoryOrder = new Map((options ?? []).map((name, index) => [name, index]));
   const publications = visibleRows(rows)
     .map((row) => ({
       category: asText(row.category) || "Other",
@@ -313,7 +307,7 @@ export function normalizeProfessorPublications(rows: SheetRow[]) {
   );
 }
 
-async function fetchSheet(sheetId: string, tab: string) {
+export async function fetchSheet(sheetId: string, tab: string) {
   if (!/^[a-zA-Z0-9_-]+$/.test(sheetId)) throw new Error("Invalid Google Sheet ID");
   const url =
     "https://docs.google.com/spreadsheets/d/" + sheetId + "/gviz/tq?" +
@@ -324,10 +318,16 @@ async function fetchSheet(sheetId: string, tab: string) {
 }
 
 async function loadTab<T>(
-  tab: string,
-  normalize: (rows: SheetRow[]) => T,
+  tab: ContentTab,
+  normalize: (rows: SheetRow[], options?: string[] | null) => T,
   sample: T,
 ): Promise<DataResult<T>> {
+  if (process.env.CONTENT_SOURCE === "sample") return { data: sample, demo: true };
+  if (process.env.DATABASE_URL) {
+    const { readContent } = await import("./database.ts");
+    const record = await readContent(tab);
+    return { data: normalize(record.rows, record.options), demo: false };
+  }
   const sheetId = process.env.GOOGLE_SHEET_ID?.trim();
   if (sheetId) {
     try {

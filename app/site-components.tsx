@@ -5,7 +5,7 @@ import type { Settings } from "./lib/types";
 import { formatText } from "./lib/format-text";
 import { MobileNavigation } from "./mobile-navigation";
 
-export type ActivePage = "home" | "members" | "research" | "publications";
+export type ActivePage = "home" | "members" | "research" | "publications" | "blog";
 
 export function ExternalLink({ href, children, className }: {
   href: string;
@@ -70,6 +70,7 @@ function Header({ settings, active, memberPage }: {
             </div>
             <Link className={`nav-link ${active === "research" ? "active" : ""}`} href="/research">Research</Link>
             <Link className={`nav-link ${active === "publications" ? "active" : ""}`} href="/publications">Publications</Link>
+            <Link className={"nav-link " + (active === "blog" ? "active" : "")} href="/blog">Blog</Link>
           </nav>
           <MobileNavigation active={active} memberPage={memberPage} memberLinks={memberLinks} />
         </div>

@@ -37,6 +37,7 @@ SHEETS = {
                 "Eusun Han's Lab is a collaborative research group exploring intelligent systems and the ways they can better understand and support people. Replace this sample introduction in the Settings sheet.",
             ],
             ["hero_image_url", ""],
+            ["hero_image_alt", ""],
             ["affiliation", "Example University · Sample content"],
             ["contact_email", "lab@example.edu"],
             ["address", "Research Building, Example University"],

@@ -31,3 +31,9 @@ export function formatText(text: string, allowLinks = false) {
 export function plainText(text: string): string {
   return text.replace(inlinePattern, (_, bold, label) => plainText(bold ?? label));
 }
+
+export function firstSentence(text: string): string {
+  const sentences = new Intl.Segmenter("en", { granularity: "sentence" }).segment(text.trim());
+  const sentence = sentences[Symbol.iterator]().next().value?.segment.trim() || "";
+  return sentence + ((sentence.match(/\*\*/g)?.length ?? 0) % 2 ? "**" : "");
+}

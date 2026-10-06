@@ -10,6 +10,7 @@ export type Settings = {
   tagline: string;
   introduction: string;
   hero_image_url: string;
+  hero_image_alt: string;
   affiliation: string;
   contact_email: string;
   address: string;

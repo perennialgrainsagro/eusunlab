@@ -45,6 +45,7 @@ export function MobileNavigation({ active, memberPage, memberLinks }: {
         </div>
         <Link className={active === "research" ? "active" : ""} href="/research" onClick={close}>Research</Link>
         <Link className={active === "publications" ? "active" : ""} href="/publications" onClick={close}>Publications</Link>
+        <Link className={active === "blog" ? "active" : ""} href="/blog" onClick={close}>Blog</Link>
       </nav>
     </div>
   );
