@@ -69,6 +69,28 @@ const routes = [
   ["/blog", "No blog posts yet"],
 ];
 
+test("robots and sitemap use the current site address and include only public pages", async () => {
+  for (const origin of [baseUrl, "https://lab.example"]) {
+    const headers = {
+      "x-forwarded-host": new URL(origin).host,
+      "x-forwarded-proto": new URL(origin).protocol.slice(0, -1),
+    };
+    const robots = await fetch(baseUrl + "/robots.txt", { headers });
+    assert.equal(robots.status, 200);
+    assert.match(robots.headers.get("content-type") ?? "", /^text\/plain\b/);
+    assert.equal(await robots.text(), `User-Agent: *\nAllow: /\n\nSitemap: ${origin}/sitemap.xml\n`);
+
+    const sitemap = await fetch(baseUrl + "/sitemap.xml", { headers });
+    assert.equal(sitemap.status, 200);
+    assert.match(sitemap.headers.get("content-type") ?? "", /xml/);
+    const xml = await sitemap.text();
+    assert.match(xml, /xmlns="http:\/\/www.sitemaps.org\/schemas\/sitemap\/0.9"/);
+    const urls = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1]);
+    assert.deepEqual(urls, routes.map(([path]) => new URL(path, origin).href));
+    assert.doesNotMatch(xml, /\/admin|\/api\//);
+  }
+});
+
 for (const [pathname, expected] of routes) {
   test(`server-renders ${pathname}`, async () => {
     const response = await fetch(baseUrl + pathname);

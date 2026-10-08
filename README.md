@@ -141,6 +141,16 @@ professor page. With no such section, the list appears last.
 The website reads database content on each request, so dashboard edits appear
 on page refresh without rebuilding.
 
+## Search engine discovery
+
+`/robots.txt` allows crawling and points to `/sitemap.xml`. The sitemap includes
+the seven public pages and all published blog posts, with each post's last
+updated date. Drafts, admin pages, and API endpoints are excluded from the sitemap.
+Both files use the request's site address and update without rebuilding.
+Admin pages retain their `noindex` metadata.
+
+After deploying, submit `sitemap.xml` in Google Search Console's Sitemaps report.
+
 ## Checks
 
 ~~~bash

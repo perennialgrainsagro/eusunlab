@@ -1,25 +1,17 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { loadSettings } from "./lib/content";
 import { plainText } from "./lib/format-text";
+import { siteUrl } from "./lib/site-url";
 import { ScrollToTop } from "./scroll-to-top";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [{ data: settings }, requestHeaders] = await Promise.all([
+  const [{ data: settings }, base] = await Promise.all([
     loadSettings(),
-    headers(),
+    siteUrl(),
   ]);
-  const host =
-    requestHeaders.get("x-forwarded-host") ??
-    requestHeaders.get("host") ??
-    "localhost:3000";
-  const protocol =
-    requestHeaders.get("x-forwarded-proto") ??
-    (host.startsWith("localhost") ? "http" : "https");
-  const base = new URL(`${protocol}://${host}`);
   const title = plainText(settings.lab_name || "Eusun Han's Lab");
   const description = plainText(settings.introduction || settings.tagline);
 
