@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  htmlLimitedBots: /.*/,
   headers() {
     return ["/admin/:path*", "/api/admin/:path*"].map((source) => ({
       source,

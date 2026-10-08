@@ -27,6 +27,9 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: base,
     title,
     description,
+    verification: {
+      google: "9NavC6PkeksjflkUKBlff4SYQS8OD5U9ds1qdJPx0WM",
+    },
     openGraph: {
       title,
       description,
