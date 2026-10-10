@@ -29,7 +29,7 @@ export function MobileNavigation({ active, memberPage, memberLinks }: {
       <nav id="mobile-navigation" className="mobile-nav" aria-label="Mobile navigation" hidden={!open}>
         <Link className={active === "home" ? "active" : ""} href="/" onClick={close}>Home</Link>
         <div className={`mobile-member-menu ${active === "members" ? "active" : ""}`}>
-          <span>Members</span>
+          <span>Team</span>
           <div className="mobile-member-submenu">
             {memberLinks.map(([label, href]) => (
               <Link

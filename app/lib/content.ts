@@ -215,6 +215,7 @@ export function normalizeStudents(rows: SheetRow[], options?: string[] | null): 
       cv_url: safeUrl(row.cv_url),
       scholar_url: safeUrl(row.scholar_url),
       research_topics: asText(row.research_topics),
+      short_bio: asText(row.short_bio),
     }))
     .filter((item) => item.name);
 

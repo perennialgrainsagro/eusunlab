@@ -100,7 +100,7 @@ for (const [pathname, expected] of routes) {
     const html = await response.text();
     assert.ok(html.toLowerCase().includes(expected.toLowerCase()));
     assert.match(html, /Sample content is shown/);
-    assert.match(html, /class="member-trigger"[^>]*>Members<\/button>/);
+    assert.match(html, /class="member-trigger"[^>]*>Team<\/button>/);
     assert.match(html, /aria-controls="mobile-navigation"/);
     assert.match(html, /<\/header><div class="site-scroll">/);
     assert.doesNotMatch(html, /<details|<summary/i);
@@ -127,6 +127,24 @@ test("alumni renders without profile images", async () => {
   const response = await fetch(baseUrl + "/members/alumni");
   const html = await response.text();
   assert.doesNotMatch(html, /member-image|portrait/i);
+});
+
+test("Members renders grouped profile rows with optional, formatted introductions", async () => {
+  const html = await (await fetch(baseUrl + "/members/students")).text();
+  assert.match(html, /<h1>Members<\/h1>/);
+  assert.match(html, /href="\/members\/professor"[^>]*>PI<\/a>/);
+  assert.match(html, /href="\/members\/students"[^>]*>Members<\/a>/);
+  const lists = [...html.matchAll(/<ul class="member-list" role="list">([\s\S]*?)<\/ul>/g)];
+  assert.equal(lists.length, 2);
+  const rows = lists.flatMap((list) => [...list[1].matchAll(/<li><article class="member-row">([\s\S]*?)<\/article><\/li>/g)]);
+  assert.equal(rows.length, 3);
+  assert.match(rows[0][1], /Graduate Student 01/);
+  assert.match(rows[0][1], /Studies <strong>human-centered AI<\/strong>/);
+  assert.match(rows[0][1], /<p>Builds interactive tools and evaluates them through user studies\.<\/p>/);
+  assert.match(rows[0][1], /href="mailto:student01@example.edu"/);
+  assert.match(rows[1][1], /Graduate Student 02/);
+  assert.match(rows[2][1], /Undergraduate Student 01/);
+  for (const row of rows.slice(1)) assert.doesNotMatch(row[1], /class="member-bio"/);
 });
 
 test("Home cards link to matching Research sections and share their titles, summaries, and images", async () => {

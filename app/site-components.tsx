@@ -44,8 +44,8 @@ function Header({ settings, active, memberPage }: {
   memberPage?: string;
 }) {
   const memberLinks = [
-    ["Professor", "/members/professor"],
-    ["Peoples", "/members/students"],
+    ["PI", "/members/professor"],
+    ["Members", "/members/students"],
     ["Alumni", "/members/alumni"],
   ];
 
@@ -73,7 +73,7 @@ function Header({ settings, active, memberPage }: {
             <Link className={`nav-link ${active === "home" ? "active" : ""}`} href="/">Home</Link>
             <div className={`member-menu ${active === "members" ? "active" : ""}`}>
               <button className="member-trigger" type="button" aria-haspopup="true">
-                Members
+                Team
               </button>
               <div className="member-submenu">
                 {memberLinks.map(([label, href]) => (

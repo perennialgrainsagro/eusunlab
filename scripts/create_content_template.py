@@ -168,6 +168,7 @@ SHEETS = {
             "cv_url",
             "scholar_url",
             "research_topics",
+            "short_bio",
             "visible",
         ],
         "rows": [
@@ -184,6 +185,7 @@ SHEETS = {
                 "",
                 "",
                 "Human-Centered AI, Machine Learning",
+                "Studies **human-centered AI** to help people understand and use machine learning systems.\nBuilds interactive tools and evaluates them through user studies.",
                 True,
             ],
             [
@@ -199,6 +201,7 @@ SHEETS = {
                 "",
                 "",
                 "Multimodal Learning",
+                "",
                 True,
             ],
             [
@@ -214,10 +217,11 @@ SHEETS = {
                 "",
                 "",
                 "Data-Efficient Learning",
+                "",
                 True,
             ],
         ],
-        "widths": [18, 15, 26, 22, 42, 25, 34, 28, 42, 42, 42, 45, 12],
+        "widths": [18, 15, 26, 22, 42, 25, 34, 28, 42, 42, 42, 45, 70, 12],
     },
     "Alumni": {
         "headers": [

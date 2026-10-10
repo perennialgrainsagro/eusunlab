@@ -100,7 +100,11 @@ test("Neon admin login, content edits, image upload, and blog publishing work en
       const original = await (await request(path)).json();
       const options = contentOptions(original);
       const addedOptions = [...options, "Temporary choice " + id];
-      const input = { rows: original.rows, options: addedOptions, updated_at: original.updated_at };
+      const bioMarker = "Temporary member bio " + id;
+      const memberIndex = tab === "Students" ? original.rows.findIndex((row) => row.name && isVisible(row.visible)) : -1;
+      if (tab === "Students") assert.ok(memberIndex >= 0, "A visible member is required to verify introduction saving.");
+      const contentRows = original.rows.map((row, index) => index === memberIndex ? { ...row, short_bio: bioMarker + "\nBuilds **research tools**." } : row);
+      const input = { rows: contentRows, options: addedOptions, updated_at: original.updated_at };
       assert.equal((await request(path, "PUT", input, "https://untrusted.example")).status, 403);
       assert.equal((await request(path, "PUT", { ...input, options: [...options, options[0]] })).status, 400);
       assert.equal((await request(path, "PUT", { ...input, options: options.filter((option) => option !== options[0]) })).status, 400, "Prevent removing names still used by content.");
@@ -110,14 +114,20 @@ test("Neon admin login, content edits, image upload, and blog publishing work en
       assert.equal(added.status, 200);
       const edit = { original, saved: await added.json() };
       optionEdits.push(edit);
-      assert.deepEqual((await (await request(path)).json()).options, addedOptions, "Unused choices must survive reloads.");
+      const reloaded = await (await request(path)).json();
+      assert.deepEqual(reloaded.options, addedOptions, "Unused choices must survive reloads.");
+      if (tab === "Students") assert.equal(reloaded.rows[memberIndex].short_bio, contentRows[memberIndex].short_bio, "Member introductions must survive reloads.");
       assert.equal((await request(path, "PUT", input)).status, 409);
       const reorderedOptions = [...addedOptions].reverse();
-      const reordered = await request(path, "PUT", { rows: original.rows, options: reorderedOptions, updated_at: edit.saved.updated_at });
+      const reordered = await request(path, "PUT", { rows: contentRows, options: reorderedOptions, updated_at: edit.saved.updated_at });
       assert.equal(reordered.status, 200);
       edit.saved = await reordered.json();
       assert.deepEqual((await (await request(path)).json()).options, reorderedOptions, "Save the explicit catalog order.");
       const publicHtml = await (await request(tab === "Students" ? "/members/students" : "/publications")).text();
+      if (tab === "Students") {
+        assert.ok(publicHtml.includes(bioMarker), "The Members list must show the saved introduction.");
+        assert.match(publicHtml, /<p>Builds <strong>research tools<\/strong>\.<\/p>/);
+      }
       const headings = reorderedOptions.filter((name) => original.rows.some((row) => String(row[choiceField(tab)] ?? "").trim() === name && isVisible(row.visible) && row[tab === "Students" ? "name" : "title"]));
       let previousHeading = -1;
       for (const name of headings) {
@@ -130,6 +140,7 @@ test("Neon admin login, content edits, image upload, and blog publishing work en
       assert.equal(removed.status, 200);
       edit.saved = await removed.json();
       assert.deepEqual(edit.saved.options, options, "Unused choices can be deleted without changing content.");
+      if (tab === "Students") assert.ok(!(await (await request("/members/students")).text()).includes(bioMarker), "Remove the temporary introduction when restoring member content.");
     }
     const png = await sharp({ create: { width: 2400, height: 1800, channels: 4, background: { r: 12, g: 110, b: 25, alpha: 0.4 } } }).png().toBuffer();
     const upload = new FormData();

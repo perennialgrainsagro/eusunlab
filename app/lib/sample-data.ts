@@ -119,6 +119,7 @@ export const sampleStudents: Student[] = [
     cv_url: "",
     scholar_url: "",
     research_topics: "Human-Centered AI, Machine Learning",
+    short_bio: "Studies **human-centered AI** to help people understand and use machine learning systems.\nBuilds interactive tools and evaluates them through user studies.",
   },
   {
     group: "Graduate",
@@ -133,6 +134,7 @@ export const sampleStudents: Student[] = [
     cv_url: "",
     scholar_url: "",
     research_topics: "Multimodal Learning",
+    short_bio: "",
   },
   {
     group: "Undergraduate",
@@ -147,6 +149,7 @@ export const sampleStudents: Student[] = [
     cv_url: "",
     scholar_url: "",
     research_topics: "Data-Efficient Learning",
+    short_bio: "",
   },
 ];
 

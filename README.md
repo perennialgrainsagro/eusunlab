@@ -51,7 +51,7 @@ the public website keeps its existing section, category, and year groups.
 New items appear at the top of the list. New News items default to today's date
 in the administrator's browser timezone.
 The Professor tab edits the single profile without add/remove controls.
-Peoples **Group** and Publications **Category** use dropdowns. Use **Manage
+Members **Group** and Publications **Category** use dropdowns. Use **Manage
 groups** or **Manage categories** to add, rename, or delete names in a popup, then save
 the section to persist both the list and its items. Existing content supplies
 the initial choices. Names in use cannot be removed until their items are
@@ -61,8 +61,12 @@ the group's or category's position in the list. Cancel rename leaves the name un
 Drag the handles or use the arrow buttons in the popup to reorder groups and
 categories, then save. The dropdowns and public section headings use that order;
 member/item order and publication year order still apply within each section.
-New Peoples items start with the Aarhus University default portrait URL.
+New Members items start with the Aarhus University default portrait URL.
 Saving a blank Photo URL also restores that default; custom photos are retained.
+The Members page shows one profile per row, grouped by **Group**, with a portrait
+beside the profile details. **Short bio / What they do** is optional and describes
+the member's research or role in the lab. Put each paragraph on a new line and
+use `**text**` for bold; saved introductions appear below the research topics.
 
 Sessions last eight hours and use signed HttpOnly cookies. Login attempts are
 limited in the database. All admin write endpoints check login and request
@@ -83,7 +87,7 @@ Use the values generated in .env.local.
 | Professor | name, secondary_name, photo_url, title, affiliation, email, personal_url, cv_url, scholar_url, bio, visible |
 | ProfessorDetails | section, display_order, content, subtext, link_label, link_url, visible |
 | ProfessorPublications | category, order, content, visible |
-| Students | group, display_order, name, secondary_name, photo_url, status, affiliation, email, personal_url, cv_url, scholar_url, research_topics, visible |
+| Students | group, display_order, name, secondary_name, photo_url, status, affiliation, email, personal_url, cv_url, scholar_url, research_topics, short_bio, visible |
 | Alumni | display_order, name, secondary_name, photo_url, degree, period, current_position, personal_url, visible |
 | Research | display_order, title, summary, details, image_url, image_alt, link_label, link_url, visible |
 | Projects | display_order, title, summary, details, image_url, image_alt, video_url, video_caption, video_captions_url, link_label, link_url, visible |
@@ -125,7 +129,7 @@ all `ProfessorDetails` sections (`section`, `content`, and `subtext`) and in
 the professor's Publication List. Use `[link text](https://example.com)`;
 bold formatting can be combined with links.
 
-Peoples groups and publication categories follow the order configured in
+Members groups and publication categories follow the order configured in
 the dashboard's **Manage groups** and **Manage categories** dialogs.
 `display_order` sorts members within each group. Publications within a category
 are sorted by year and then by `display_order`.

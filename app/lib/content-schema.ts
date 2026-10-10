@@ -8,7 +8,7 @@ export const contentTabs = {
   Professor: { label: "Professor", fields: ["name", "secondary_name", "photo_url", "title", "affiliation", "email", "personal_url", "cv_url", "scholar_url", "bio", "visible"] },
   ProfessorDetails: { label: "Professor details", fields: ["section", "display_order", "content", "subtext", "link_label", "link_url", "visible"] },
   ProfessorPublications: { label: "Professor publications", fields: ["category", "order", "content", "visible"] },
-  Students: { label: "Peoples", fields: ["group", "display_order", "name", "secondary_name", "photo_url", "status", "affiliation", "email", "personal_url", "cv_url", "scholar_url", "research_topics", "visible"] },
+  Students: { label: "Members", fields: ["group", "display_order", "name", "secondary_name", "photo_url", "status", "affiliation", "email", "personal_url", "cv_url", "scholar_url", "research_topics", "short_bio", "visible"] },
   Alumni: { label: "Alumni", fields: ["display_order", "name", "secondary_name", "photo_url", "degree", "period", "current_position", "personal_url", "visible"] },
   Research: { label: "Research / Home cards", fields: ["display_order", "title", "summary", "details", "image_url", "image_alt", "link_label", "link_url", "visible"] },
   Projects: { label: "Projects", fields: ["display_order", "title", "summary", "details", "image_url", "image_alt", "video_url", "video_caption", "video_captions_url", "link_label", "link_url", "visible"] },
@@ -75,11 +75,12 @@ export function fieldKind(name: string) {
   if (name === "month") return "date";
   if (name.endsWith("_url")) return "url";
   if (name === "email") return "email";
-  if (["value", "content", "summary", "details", "bio", "subtext", "research_topics", "authors"].includes(name)) return "textarea";
+  if (["value", "content", "summary", "details", "bio", "short_bio", "subtext", "research_topics", "authors"].includes(name)) return "textarea";
   return "text";
 }
 
 export function fieldLabel(name: string) {
+  if (name === "short_bio") return "Short bio / What they do";
   return name.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 

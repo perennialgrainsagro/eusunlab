@@ -73,6 +73,24 @@ test("students without photos save and display the default portrait while custom
   assert.throws(() => validateRows("Students", [{ photo_url: "javascript:alert(1)" }]));
 });
 
+test("member introductions survive saving while legacy and hidden profiles remain supported", () => {
+  const short_bio = "Studies **plant resilience**.\nBuilds imaging tools for the lab.";
+  const rows = validateRows("Students", [
+    { name: "Member", group: "Postdocs", short_bio, visible: true },
+    { name: "Legacy member", group: "Postdocs", visible: true },
+    { name: "Hidden member", group: "Postdocs", short_bio: "Private draft", visible: false },
+  ]);
+  assert.equal(rows[0].short_bio, short_bio);
+  assert.equal(rows[1].short_bio, "");
+  assert.equal(rows[2].short_bio, "Private draft");
+  const members = normalizeStudents(rows);
+  assert.deepEqual(members.map((member) => member.name), ["Member", "Legacy member"]);
+  assert.deepEqual(members.map((member) => member.short_bio), [short_bio, ""]);
+  assert.equal(normalizeStudents([{ name: "Legacy member" }])[0].short_bio, "");
+  assert.throws(() => validateRows("Students", [{ short_bio: { html: "bad" } }]));
+  assert.throws(() => validateRows("Students", [{ short_bio: "x".repeat(30001) }]));
+});
+
 test("reordering updates public display order without losing content, hidden rows, or grouping", () => {
   const rows = [
     { title: "First", content: "First", name: "First", display_order: 8, order: 8, visible: true, month: "2026-10-01", category: "Journal", year: 2026, group: "Graduate" },

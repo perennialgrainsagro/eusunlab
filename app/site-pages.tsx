@@ -230,25 +230,28 @@ export async function ProfessorPage() {
   );
 }
 
-function StudentCard({ student }: { student: Student }) {
+function MemberRow({ student }: { student: Student }) {
   return (
-    <article className="member-card">
+    <article className="member-row">
       <FallbackImage
         src={student.photo_url}
         alt={`${plainText(student.name)} portrait`}
         className="member-image"
       />
-      <h3>{formatText(student.name)}</h3>
-      {student.secondary_name ? <p className="member-meta">{formatText(student.secondary_name)}</p> : null}
-      {student.status ? <p className="role">{formatText(student.status)}</p> : null}
-      {student.affiliation ? <p className="member-meta">{formatText(student.affiliation)}</p> : null}
-      {student.research_topics ? <p className="member-meta">{formatText(student.research_topics)}</p> : null}
-      <ProfileLinks
-        email={student.email}
-        personal={student.personal_url}
-        cv={student.cv_url}
-        scholar={student.scholar_url}
-      />
+      <div className="member-copy">
+        <h3>{formatText(student.name)}</h3>
+        {student.secondary_name ? <p className="member-meta">{formatText(student.secondary_name)}</p> : null}
+        {student.status ? <p className="role">{formatText(student.status)}</p> : null}
+        {student.affiliation ? <p className="member-meta">{formatText(student.affiliation)}</p> : null}
+        {student.research_topics ? <p className="member-meta">{formatText(student.research_topics)}</p> : null}
+        {student.short_bio ? <div className="member-bio"><Multiline text={student.short_bio} /></div> : null}
+        <ProfileLinks
+          email={student.email}
+          personal={student.personal_url}
+          cv={student.cv_url}
+          scholar={student.scholar_url}
+        />
+      </div>
     </article>
   );
 }
@@ -265,7 +268,7 @@ export async function StudentsPage() {
       active="members"
       memberPage="students"
     >
-      <PageHero title="Peoples" />
+      <PageHero title="Members" />
       <section className="section">
         <div className="container">
           {groups.length ? groups.map((group) => {
@@ -276,12 +279,13 @@ export async function StudentsPage() {
                   <h2>{formatText(group)}</h2>
                   <span>{members.length} {members.length === 1 ? "member" : "members"}</span>
                 </div>
-                <div className="member-grid">
-                  {members.map((student, index) => <StudentCard key={`${student.name}-${index}`} student={student} />)}
-                </div>
+                {/* eslint-disable-next-line jsx-a11y/no-redundant-roles -- Preserve list semantics when CSS suppresses native markers. */}
+                <ul className="member-list" role="list">
+                  {members.map((student, index) => <li key={`${student.name}-${index}`}><MemberRow student={student} /></li>)}
+                </ul>
               </section>
             );
-          }) : <EmptyState>Student profiles will be added soon.</EmptyState>}
+          }) : <EmptyState>Member profiles will be added soon.</EmptyState>}
         </div>
       </section>
     </SiteFrame>

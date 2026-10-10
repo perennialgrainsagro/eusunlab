@@ -62,6 +62,7 @@ export type Student = {
   cv_url: string;
   scholar_url: string;
   research_topics: string;
+  short_bio: string;
 };
 
 export type Alumni = {
