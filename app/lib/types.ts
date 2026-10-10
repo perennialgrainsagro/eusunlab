@@ -86,6 +86,12 @@ export type ResearchItem = {
   link_url: string;
 };
 
+export type ProjectItem = ResearchItem & {
+  video_url: string;
+  video_caption: string;
+  video_captions_url: string;
+};
+
 export type Publication = {
   category: string;
   year: number;

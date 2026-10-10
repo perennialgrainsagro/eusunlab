@@ -5,6 +5,7 @@ import {
   sampleProfessorDetails,
   sampleProfessorPublications,
   samplePublications,
+  sampleProjects,
   sampleResearch,
   sampleSettings,
   sampleStudents,
@@ -16,6 +17,7 @@ import type {
   Professor,
   ProfessorDetail,
   Publication,
+  ProjectItem,
   ResearchItem,
   Settings,
   SheetRow,
@@ -260,6 +262,22 @@ export function normalizeResearch(rows: SheetRow[]): ResearchItem[] {
   );
 }
 
+export function normalizeProjects(rows: SheetRow[]): ProjectItem[] {
+  return byOrder(visibleRows(rows).map((row) => ({
+    display_order: asOrder(row.display_order),
+    title: asText(row.title),
+    summary: asText(row.summary),
+    details: asText(row.details),
+    image_url: safeUrl(row.image_url, false),
+    image_alt: asText(row.image_alt),
+    video_url: safeUrl(row.video_url, false),
+    video_caption: asText(row.video_caption),
+    video_captions_url: safeUrl(row.video_captions_url, false),
+    link_label: asText(row.link_label),
+    link_url: safeUrl(row.link_url),
+  })).filter((item) => item.title));
+}
+
 export function normalizePublications(rows: SheetRow[], options?: string[] | null): Publication[] {
   const categoryOrder = new Map((options ?? []).map((name, index) => [name, index]));
   const publications = visibleRows(rows)
@@ -362,6 +380,7 @@ export const loadProfessorDetails = () =>
 export const loadStudents = () => loadTab("Students", normalizeStudents, sampleStudents);
 export const loadAlumni = () => loadTab("Alumni", normalizeAlumni, sampleAlumni);
 export const loadResearch = () => loadTab("Research", normalizeResearch, sampleResearch);
+export const loadProjects = () => loadTab("Projects", normalizeProjects, sampleProjects);
 export const loadPublications = () =>
   loadTab("Publications", normalizePublications, samplePublications);
 export const loadProfessorPublications = () =>

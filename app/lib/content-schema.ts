@@ -8,9 +8,10 @@ export const contentTabs = {
   Professor: { label: "Professor", fields: ["name", "secondary_name", "photo_url", "title", "affiliation", "email", "personal_url", "cv_url", "scholar_url", "bio", "visible"] },
   ProfessorDetails: { label: "Professor details", fields: ["section", "display_order", "content", "subtext", "link_label", "link_url", "visible"] },
   ProfessorPublications: { label: "Professor publications", fields: ["category", "order", "content", "visible"] },
-  Students: { label: "Students", fields: ["group", "display_order", "name", "secondary_name", "photo_url", "status", "affiliation", "email", "personal_url", "cv_url", "scholar_url", "research_topics", "visible"] },
+  Students: { label: "Peoples", fields: ["group", "display_order", "name", "secondary_name", "photo_url", "status", "affiliation", "email", "personal_url", "cv_url", "scholar_url", "research_topics", "visible"] },
   Alumni: { label: "Alumni", fields: ["display_order", "name", "secondary_name", "photo_url", "degree", "period", "current_position", "personal_url", "visible"] },
   Research: { label: "Research / Home cards", fields: ["display_order", "title", "summary", "details", "image_url", "image_alt", "link_label", "link_url", "visible"] },
+  Projects: { label: "Projects", fields: ["display_order", "title", "summary", "details", "image_url", "image_alt", "video_url", "video_caption", "video_captions_url", "link_label", "link_url", "visible"] },
   Publications: { label: "Publications", fields: ["category", "year", "display_order", "venue", "title", "authors", "paper_url", "project_url", "code_url", "video_url", "visible"] },
 } as const;
 
@@ -39,6 +40,15 @@ export function validateOptions(tab: ContentTab, value: unknown, rows: SheetRow[
     if (name && !options.includes(name)) throw new Error(fieldLabel(field) + ' "' + name + '" is in use. Reassign its items before removing it.');
   }
   return options;
+}
+
+export function renameContentOption(tab: ContentTab, options: string[], rows: SheetRow[], current: string, value: string) {
+  const field = choiceField(tab);
+  if (!field || !options.includes(current)) throw new Error("Select an existing group or category to rename.");
+  const name = value.trim();
+  const nextRows = rows.map((row) => String(row[field] ?? "").trim() === current ? { ...row, [field]: name } : row);
+  const nextOptions = validateOptions(tab, options.map((option) => option === current ? name : option), nextRows);
+  return { options: nextOptions, rows: nextRows };
 }
 
 export function isContentTab(value: string): value is ContentTab {
@@ -77,12 +87,25 @@ export function contentUrl(value: unknown, allowMailto = false) {
   if (typeof value !== "string" || !value.trim()) return "";
   const input = value.trim();
   if (/^\/media\/[0-9a-f-]{36}$/i.test(input)) return input;
+  if (/^\/projects\/[a-z0-9-]+\.(svg|mp4|webm|vtt)$/.test(input)) return input;
   try {
     const url = new URL(input);
     return ["https:", "http:", ...(allowMailto ? ["mailto:"] : [])].includes(url.protocol) ? input : "";
   } catch {
     return "";
   }
+}
+
+export function projectVideo(value: unknown): { kind: "file" | "youtube"; url: string } | null {
+  const input = contentUrl(value);
+  if (!input) return null;
+  const url = new URL(input, "https://local.invalid");
+  const host = url.hostname.toLowerCase();
+  if (["youtube.com", "www.youtube.com", "m.youtube.com", "youtube-nocookie.com", "www.youtube-nocookie.com", "youtu.be"].includes(host)) {
+    const id = host === "youtu.be" ? url.pathname.slice(1) : url.pathname === "/watch" ? url.searchParams.get("v") : /^\/(?:embed|shorts)\/([^/]+)\/?$/.exec(url.pathname)?.[1];
+    return id && /^[a-zA-Z0-9_-]{11}$/.test(id) ? { kind: "youtube", url: "https://www.youtube-nocookie.com/embed/" + id } : null;
+  }
+  return /\.(mp4|webm|ogv|ogg)$/i.test(url.pathname) ? { kind: "file", url: input } : null;
 }
 
 export function validateRows(tab: ContentTab, value: unknown): SheetRow[] {
@@ -98,6 +121,12 @@ export function validateRows(tab: ContentTab, value: unknown): SheetRow[] {
       if (fieldKind(field) === "number" && cell !== "" && !Number.isFinite(Number(cell))) throw new Error("Invalid number for " + field + ".");
       if (field.endsWith("_url") && cell && !contentUrl(String(cell), !["image_url", "photo_url"].includes(field))) {
         throw new Error("Use a valid HTTP or HTTPS URL for " + fieldLabel(field) + ".");
+      }
+      if (tab === "Projects" && field === "video_url" && cell && !projectVideo(String(cell))) {
+        throw new Error("Use a YouTube link or a direct MP4, WebM, or Ogg video URL.");
+      }
+      if (tab === "Projects" && field === "video_captions_url" && cell && !contentUrl(String(cell))) {
+        throw new Error("Use a valid HTTP or HTTPS URL for video captions.");
       }
       row[field] = cell;
     }

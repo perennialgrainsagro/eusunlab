@@ -1,10 +1,14 @@
 "use client";
 
+import dynamic from "next/dynamic";
+import rehypeSanitize from "rehype-sanitize";
 import { useRef, useState, type FormEvent, type PointerEvent } from "react";
-import { choiceField, contentOptions, contentTabs, contentUrl, DEFAULT_STUDENT_PHOTO_URL, fieldKind, fieldLabel, reorderList, reorderRows, validateOptions, type ContentRecord } from "../lib/content-schema.ts";
+import { choiceField, contentOptions, contentTabs, contentUrl, DEFAULT_STUDENT_PHOTO_URL, fieldKind, fieldLabel, renameContentOption, reorderList, reorderRows, validateOptions, type ContentRecord } from "../lib/content-schema.ts";
 import type { SheetRow } from "../lib/types.ts";
 import { FallbackImage } from "../fallback-image";
 import { uploadImage } from "./upload";
+
+const MDEditor = dynamic(() => import("@uiw/react-md-editor/nohighlight"), { ssr: false, loading: () => <p>Loading editor…</p> });
 
 function visible(value: unknown) {
   return !["false", "0", "no", "hidden"].includes(String(value).trim().toLowerCase());
@@ -33,6 +37,8 @@ export function ContentEditor({ record, onSaved, onDirty }: {
   const [options, setOptions] = useState(() => contentOptions(record));
   const [optionName, setOptionName] = useState("");
   const [optionError, setOptionError] = useState("");
+  const [editingOption, setEditingOption] = useState<string | null>(null);
+  const optionInput = useRef<HTMLInputElement>(null);
   const optionsDialog = useRef<HTMLDialogElement>(null);
   const dragged = useRef<SortTarget | null>(null);
   const [dropTarget, setDropTarget] = useState<SortTarget | null>(null);
@@ -86,16 +92,22 @@ export function ContentEditor({ record, onSaved, onDirty }: {
       onPointerUp={(event) => { if (!event.isPrimary) return; const target = pointerTarget(event, kind); if (dragged.current?.kind === kind && target !== null) (kind === "item" ? moveRow : moveOption)(dragged.current.index, target); dragged.current = null; setDropTarget(null); }}
       onPointerCancel={(event) => { if (event.isPrimary) { dragged.current = null; setDropTarget(null); } }}><span aria-hidden="true">⠿</span></button>;
   }
-  function addOption(event: FormEvent) {
+  function submitOption(event: FormEvent) {
     event.preventDefault();
     try {
-      setOptions(validateOptions(record.tab, [...options, optionName], rows));
-      setOptionName(""); setOptionError(""); markDirty();
-    } catch (error) { setOptionError(error instanceof Error ? error.message : "Unable to add this name."); }
+      if (editingOption === null) {
+        setOptions(validateOptions(record.tab, [...options, optionName], rows));
+      } else {
+        const renamed = renameContentOption(record.tab, options, rows, editingOption, optionName);
+        setOptions(renamed.options); setRows(renamed.rows);
+      }
+      setEditingOption(null); setOptionName(""); setOptionError(""); markDirty();
+    } catch (error) { setOptionError(error instanceof Error ? error.message : "Unable to save this name."); }
   }
   function deleteOption(name: string) {
     try {
       setOptions(validateOptions(record.tab, options.filter((option) => option !== name), rows));
+      if (editingOption === name) { setEditingOption(null); setOptionName(""); }
       setOptionError(""); markDirty();
     } catch (error) { setOptionError(error instanceof Error ? error.message : "Unable to delete this name."); }
   }
@@ -115,7 +127,13 @@ export function ContentEditor({ record, onSaved, onDirty }: {
   async function attach(file: File | undefined, index: number, field: string) {
     if (!file) return;
     setBusy(true); setError("");
-    try { updateCell(index, field, await uploadImage(file)); }
+    try {
+      const url = await uploadImage(file);
+      if (record.tab === "Projects" && field === "details") {
+        setRows((current) => current.map((row, position) => position === index ? { ...row, details: String(row.details || "").trimEnd() + "\n\n![Project image](" + url + ")" } : row));
+        markDirty();
+      } else updateCell(index, field, url);
+    }
     catch (error) { setError(error instanceof Error ? error.message : "Unable to upload."); }
     finally { setBusy(false); }
   }
@@ -125,13 +143,21 @@ export function ContentEditor({ record, onSaved, onDirty }: {
     const kind = fieldKind(settingKey);
     const id = record.tab + "-" + index + "-" + name;
     const image = ["image_url", "photo_url", "hero_image_url"].includes(settingKey);
+    const projectDetails = record.tab === "Projects" && name === "details";
     return (
-      <div className={"admin-field " + (kind === "checkbox" ? "admin-checkbox" : "")} key={id}>
+      <div className={"admin-field " + (kind === "checkbox" ? "admin-checkbox" : "")} key={id} data-color-mode="light">
         <label htmlFor={id}>{label}</label>
-        {name === managedField ? <select id={id} value={String(row[name] ?? "").trim()} disabled={busy} onChange={(event) => updateCell(index, name, event.target.value)}><option value="">Select a {managedField}</option>{options.map((option) => <option key={option} value={option}>{option}</option>)}</select> : kind === "checkbox" ? <input id={id} type="checkbox" checked={visible(row[name])} onChange={(event) => updateCell(index, name, event.target.checked)} /> :
+        {projectDetails ? <MDEditor value={String(row[name] ?? "")} onChange={(value) => updateCell(index, name, value || "")} preview="edit" height={340} visibleDragbar={false} previewOptions={{ rehypePlugins: [rehypeSanitize] }} textareaProps={{ id, disabled: busy, maxLength: 30000 }} /> : name === managedField ? <select id={id} value={String(row[name] ?? "").trim()} disabled={busy} onChange={(event) => updateCell(index, name, event.target.value)}><option value="">Select a {managedField}</option>{options.map((option) => <option key={option} value={option}>{option}</option>)}</select> : kind === "checkbox" ? <input id={id} type="checkbox" checked={visible(row[name])} onChange={(event) => updateCell(index, name, event.target.checked)} /> :
           kind === "textarea" || (name === "value" && ["introduction", "research_intro", "publications_intro"].includes(settingKey)) ? (
             <textarea id={id} value={String(row[name] ?? "")} rows={4} onChange={(event) => updateCell(index, name, event.target.value)} maxLength={30000} />
           ) : <input id={id} type={kind === "url" ? "text" : kind} inputMode={kind === "url" ? "url" : undefined} value={kind === "date" ? dateValue(row[name]) : String(row[name] ?? "")} onChange={(event) => updateCell(index, name, event.target.value)} />}
+        {projectDetails ? <div className="admin-image-field">
+          <p>Use Markdown for headings, lists, links, and images. Upload an image to insert it at the end of the description.</p>
+          <label htmlFor={id + "-file"} className="admin-upload-label">Insert content image <span>(JPEG, PNG, WebP or GIF · up to 3 MB)</span></label>
+          <input id={id + "-file"} type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={busy} onChange={(event) => { void attach(event.target.files?.[0], index, name); event.target.value = ""; }} />
+        </div> : null}
+        {record.tab === "Projects" && name === "video_url" ? <p>Paste a YouTube link or a direct MP4, WebM, or Ogg file URL. The player appears below the description.</p> : null}
+        {record.tab === "Projects" && name === "video_captions_url" ? <p>Optional WebVTT (.vtt) captions for direct video files with spoken content.</p> : null}
         {image ? (
           <div className="admin-image-field">
             {row[name] && contentUrl(String(row[name])) ? <FallbackImage key={String(row[name])} src={String(row[name])} alt="Selected image preview" className="admin-image-preview" /> : null}
@@ -145,8 +171,9 @@ export function ContentEditor({ record, onSaved, onDirty }: {
   return (
     <>
     <form onSubmit={save}>
-      <div className="admin-section-heading"><div><h1>{contentTabs[record.tab].label}</h1><p>{dirty ? "Unsaved changes" : "Edit content, then save to update the website."}</p></div><div className="admin-section-actions">{managedField ? <button className="admin-secondary" type="button" disabled={busy} onClick={() => { setOptionName(""); setOptionError(""); optionsDialog.current?.showModal(); }}>Manage {managedField === "group" ? "groups" : "categories"}</button> : null}<button className="admin-primary" type="submit" disabled={busy || !dirty}>{busy ? "Please wait…" : "Save changes"}</button></div></div>
+      <div className="admin-section-heading"><div><h1>{contentTabs[record.tab].label}</h1><p>{dirty ? "Unsaved changes" : "Edit content, then save to update the website."}</p></div><div className="admin-section-actions">{managedField ? <button className="admin-secondary" type="button" disabled={busy} onClick={() => { setEditingOption(null); setOptionName(""); setOptionError(""); optionsDialog.current?.showModal(); }}>Manage {managedField === "group" ? "groups" : "categories"}</button> : null}<button className="admin-primary" type="submit" disabled={busy || !dirty}>{busy ? "Please wait…" : "Save changes"}</button></div></div>
       {record.tab === "Research" ? <p>The first three visible research items also appear as Home cards, ordered by Display order.</p> : null}
+      {record.tab === "Projects" ? <p>Introduce each project with a summary, a Markdown description with images, and an optional video. Replace the example content with your actual projects.</p> : null}
       {error ? <p className="admin-error" role="alert">{error}</p> : null}
       {notice ? <p className="admin-notice" role="status">{notice}</p> : null}
       {record.tab === "Settings" ? <div className="admin-settings-grid">{rows.map((row, index) => field(index, "value", fieldLabel(String(row.key))))}</div> : (
@@ -171,18 +198,19 @@ export function ContentEditor({ record, onSaved, onDirty }: {
     </form>
     {managedField ? <dialog ref={optionsDialog} className="admin-options-dialog" aria-labelledby="options-title">
       <div className="admin-item-heading"><h2 id="options-title">Manage {managedField === "group" ? "groups" : "categories"}</h2><button className="admin-secondary" type="button" onClick={() => optionsDialog.current?.close()}>Close</button></div>
-      <p>Changes apply when you save this section. Reassign items before deleting a name they use.</p>
+      <p>Renaming also updates items that use the name. Changes apply when you save this section. Reassign items before deleting a name they use.</p>
       {options.length > 1 ? <p className="admin-sort-hint" id="option-sort-hint">Drag the handles or use the arrows to reorder groups or categories. This order also applies on the website.</p> : null}
       <ul className="admin-option-list">
         {options.map((option, index) => {
           const count = rows.filter((row) => String(row[managedField] ?? "").trim() === option).length;
-          return <li key={option} data-option-index={index} className={dropTarget?.kind === "option" && dropTarget.index === index ? "drop-target" : undefined}>{dragHandle("option", index, options.length)}<span>{option}<small>{count ? count + (count === 1 ? " item" : " items") + " · In use" : "Unused"}</small></span><div className="admin-order-buttons"><button type="button" aria-label={"Move " + managedField + " " + option + " up"} disabled={busy || index === 0} onClick={() => moveOption(index, index - 1)}>↑</button><button type="button" aria-label={"Move " + managedField + " " + option + " down"} disabled={busy || index === options.length - 1} onClick={() => moveOption(index, index + 1)}>↓</button></div><button className="admin-danger" type="button" aria-label={"Delete " + managedField + " " + option} disabled={count > 0 || busy} onClick={() => deleteOption(option)}>Delete</button></li>;
+          return <li key={option} data-option-index={index} className={dropTarget?.kind === "option" && dropTarget.index === index ? "drop-target" : undefined}>{dragHandle("option", index, options.length)}<span>{option}<small>{count ? count + (count === 1 ? " item" : " items") + " · In use" : "Unused"}</small></span><div className="admin-order-buttons"><button type="button" aria-label={"Move " + managedField + " " + option + " up"} disabled={busy || index === 0} onClick={() => moveOption(index, index - 1)}>↑</button><button type="button" aria-label={"Move " + managedField + " " + option + " down"} disabled={busy || index === options.length - 1} onClick={() => moveOption(index, index + 1)}>↓</button></div><div className="admin-option-actions"><button className="admin-secondary" type="button" aria-label={"Rename " + managedField + " " + option} disabled={busy} onClick={() => { setEditingOption(option); setOptionName(option); setOptionError(""); optionInput.current?.focus(); }}>Rename</button><button className="admin-danger" type="button" aria-label={"Delete " + managedField + " " + option} disabled={count > 0 || busy} onClick={() => deleteOption(option)}>Delete</button></div></li>;
         })}
       </ul>
       {!options.length ? <p>No {managedField === "group" ? "groups" : "categories"} yet. Add one below.</p> : null}
-      <form onSubmit={addOption}>
-        <div className="admin-field"><label htmlFor="new-content-option">New {managedField}</label><div className="admin-option-add"><input id="new-content-option" value={optionName} onChange={(event) => { setOptionName(event.target.value); setOptionError(""); }} maxLength={200} required disabled={busy} /><button className="admin-primary" type="submit" disabled={busy}>Add {managedField}</button></div></div>
-        {optionError ? <p className="admin-error" role="alert">{optionError}</p> : null}
+      <form onSubmit={submitOption}>
+        <div className="admin-field"><label htmlFor="new-content-option">{editingOption === null ? "New " + managedField : 'New name for "' + editingOption + '"'}</label><div className="admin-option-add"><input ref={optionInput} id="new-content-option" value={optionName} onChange={(event) => { setOptionName(event.target.value); setOptionError(""); }} maxLength={200} required disabled={busy} aria-invalid={!!optionError} aria-describedby={optionError ? "content-option-error" : undefined} /><button className="admin-primary" type="submit" disabled={busy}>{editingOption === null ? "Add " : "Rename "}{managedField}</button></div></div>
+        {editingOption !== null ? <button className="admin-secondary" type="button" disabled={busy} onClick={() => { setEditingOption(null); setOptionName(""); setOptionError(""); }}>Cancel rename</button> : null}
+        {optionError ? <p id="content-option-error" className="admin-error" role="alert">{optionError}</p> : null}
       </form>
     </dialog> : null}
     </>

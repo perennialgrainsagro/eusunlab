@@ -5,6 +5,7 @@ import type {
   ProfessorDetail,
   Publication,
   ResearchItem,
+  ProjectItem,
   Settings,
   Student,
 } from "./types.ts";
@@ -193,6 +194,35 @@ export const sampleResearch: ResearchItem[] = [
       "We investigate models that reason across different forms of information.\nReplace this sample area with the lab's actual research direction.",
     image_url: "",
     image_alt: "Sample placeholder for multimodal intelligence research",
+    link_label: "",
+    link_url: "",
+  },
+];
+
+export const sampleProjects: ProjectItem[] = [
+  {
+    display_order: 1,
+    title: "Root Phenotyping for Resilient Crops",
+    summary: "Connecting root architecture with water and nutrient use through imaging and trait analysis.",
+    details: "> Example project — this content and illustration demonstrate the page layout. Replace them with the lab’s actual project information.\n\n### Project overview\nThis example combines **root imaging**, trait extraction, and field observations to describe how crop root systems develop under different growing conditions.\n\n![Example workflow from root imaging to trait analysis and field evaluation](/projects/root-workflow.svg)\n\n### Research focus\n- Measure root depth, branching, and spatial distribution.\n- Relate root traits to water and nutrient availability.\n- Compare observations across growing conditions.",
+    image_url: "/projects/root-phenotyping.svg",
+    image_alt: "Illustration of a plant and its branching root system below the soil surface",
+    video_url: "",
+    video_caption: "",
+    video_captions_url: "",
+    link_label: "",
+    link_url: "",
+  },
+  {
+    display_order: 2,
+    title: "Image-Based Plant Growth Monitoring",
+    summary: "Following plant development over time with repeated imaging and accessible visual summaries.",
+    details: "> Example project — the video below is a public sample clip, included to demonstrate video playback. It is not footage from the lab.\n\n### Project overview\nThis example explores how repeated images can help describe **plant growth and development**. Images, measurements, and video observations can be presented together in the project description.\n\n### Research focus\n- Record visible changes in plant structure over time.\n- Compare growth patterns across treatments.\n- Present observations alongside reproducible analysis.",
+    image_url: "/projects/plant-monitoring.svg",
+    image_alt: "Illustration of successive plant growth stages within an imaging frame",
+    video_url: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    video_caption: "Example video: a flower clip from MDN’s CC0 media collection. Replace this URL with your project video.",
+    video_captions_url: "",
     link_label: "",
     link_url: "",
   },

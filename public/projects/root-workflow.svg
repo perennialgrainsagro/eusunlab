@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 250" fill="none">
+  <rect width="900" height="250" rx="10" fill="#F2F5F7"/>
+  <g fill="#FFF" stroke="#D9DDE0">
+    <rect x="24" y="24" width="254" height="202" rx="8"/><rect x="323" y="24" width="254" height="202" rx="8"/><rect x="622" y="24" width="254" height="202" rx="8"/>
+  </g>
+  <g stroke="#255A70" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M292 123H309M302 116L309 123L302 130M591 123H608M601 116L608 123L601 130"/>
+    <rect x="109" y="59" width="85" height="85" rx="4"/>
+    <path d="M151 69V91C137 109 137 124 134 133M151 91C164 108 171 116 174 135M148 100V135M152 79L137 76M152 80L166 73"/>
+    <path d="M409 142V65M409 142H491M425 123L445 97L465 108L487 75"/>
+    <circle cx="445" cy="97" r="4" fill="#FFF"/><circle cx="465" cy="108" r="4" fill="#FFF"/>
+    <path d="M705 142H794M716 140V85M749 140V65M782 140V85"/>
+  </g>
+  <g fill="#7B9F70">
+    <path d="M716 112C693 116 690 99 691 92C708 89 717 99 716 112ZM716 100C736 102 741 90 739 82C724 80 716 89 716 100Z"/>
+    <path d="M749 95C726 99 723 82 724 75C741 72 750 82 749 95ZM749 83C769 85 774 73 772 65C757 63 749 72 749 83Z"/>
+    <path d="M782 112C759 116 756 99 757 92C774 89 783 99 782 112ZM782 100C802 102 807 90 805 82C790 80 782 89 782 100Z"/>
+  </g>
+  <g fill="#202428" font-family="Arial, sans-serif" font-size="20" text-anchor="middle">
+    <text x="151" y="177">Root imaging</text><text x="450" y="177">Trait analysis</text><text x="749" y="177">Field evaluation</text>
+  </g>
+  <g fill="#626970" font-family="Arial, sans-serif" font-size="14" text-anchor="middle">
+    <text x="151" y="201">Capture root structure</text><text x="450" y="201">Measure and compare</text><text x="749" y="201">Connect traits with growth</text>
+  </g>
+</svg>

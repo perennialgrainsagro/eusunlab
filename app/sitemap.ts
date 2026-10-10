@@ -8,6 +8,7 @@ const pages = [
   "/members/students",
   "/members/alumni",
   "/research",
+  "/projects",
   "/publications",
   "/blog",
 ];

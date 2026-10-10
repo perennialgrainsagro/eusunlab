@@ -35,7 +35,7 @@ export function MobileNavigation({ active, memberPage, memberLinks }: {
               <Link
                 key={href}
                 href={href}
-                className={memberPage === label.toLowerCase() ? "active" : ""}
+                className={href === `/members/${memberPage}` ? "active" : ""}
                 onClick={close}
               >
                 {label}
@@ -44,6 +44,7 @@ export function MobileNavigation({ active, memberPage, memberLinks }: {
           </div>
         </div>
         <Link className={active === "research" ? "active" : ""} href="/research" onClick={close}>Research</Link>
+        <Link className={active === "projects" ? "active" : ""} href="/projects" aria-current={active === "projects" ? "page" : undefined} onClick={close}>Projects</Link>
         <Link className={active === "publications" ? "active" : ""} href="/publications" onClick={close}>Publications</Link>
         <Link className={active === "blog" ? "active" : ""} href="/blog" onClick={close}>Blog</Link>
       </nav>

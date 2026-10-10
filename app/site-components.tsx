@@ -1,11 +1,12 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
 import { FallbackImage } from "./fallback-image";
 import type { Settings } from "./lib/types";
-import { formatText } from "./lib/format-text";
+import { formatText, plainText } from "./lib/format-text";
 import { MobileNavigation } from "./mobile-navigation";
 
-export type ActivePage = "home" | "members" | "research" | "publications" | "blog";
+export type ActivePage = "home" | "members" | "research" | "projects" | "publications" | "blog";
 
 export function ExternalLink({ href, children, className }: {
   href: string;
@@ -44,16 +45,30 @@ function Header({ settings, active, memberPage }: {
 }) {
   const memberLinks = [
     ["Professor", "/members/professor"],
-    ["Students", "/members/students"],
+    ["Peoples", "/members/students"],
     ["Alumni", "/members/alumni"],
   ];
 
   return (
     <>
       <a className="skip-link" href="#main-content">Skip to main content</a>
+      <div className="site-masthead">
+        <div className="brand-shell">
+          <Link className="brand" href="/">
+            <Image
+              className="brand-logo"
+              src="/logos/logo-transparent.png"
+              alt={plainText(settings.lab_name || "Eusun Han Lab")}
+              width={640}
+              height={162}
+              loading="eager"
+              unoptimized
+            />
+          </Link>
+        </div>
+      </div>
       <header className="site-header">
         <div className="nav-shell">
-          <Link className="brand" href="/">{formatText(settings.lab_name || "Eusun Han's Lab")}</Link>
           <nav className="site-nav" aria-label="Primary navigation">
             <Link className={`nav-link ${active === "home" ? "active" : ""}`} href="/">Home</Link>
             <div className={`member-menu ${active === "members" ? "active" : ""}`}>
@@ -62,13 +77,14 @@ function Header({ settings, active, memberPage }: {
               </button>
               <div className="member-submenu">
                 {memberLinks.map(([label, href]) => (
-                  <Link key={href} href={href} className={memberPage === label.toLowerCase() ? "active" : ""}>
+                  <Link key={href} href={href} className={href === `/members/${memberPage}` ? "active" : ""}>
                     {label}
                   </Link>
                 ))}
               </div>
             </div>
             <Link className={`nav-link ${active === "research" ? "active" : ""}`} href="/research">Research</Link>
+            <Link className={`nav-link ${active === "projects" ? "active" : ""}`} href="/projects" aria-current={active === "projects" ? "page" : undefined}>Projects</Link>
             <Link className={`nav-link ${active === "publications" ? "active" : ""}`} href="/publications">Publications</Link>
             <Link className={"nav-link " + (active === "blog" ? "active" : "")} href="/blog">Blog</Link>
           </nav>
@@ -83,11 +99,14 @@ function Footer({ settings }: { settings: Settings }) {
   return (
     <footer className="site-footer">
       <div className="container footer-grid">
+        <Link className="footer-logo" href="/" aria-label="Eusun Han Lab home">
+          <Image src="/logos/logo-symbol.png" alt="" width={192} height={192} unoptimized />
+        </Link>
         <div>
           <p>{formatText(settings.footer_text || settings.lab_name)}</p>
           {settings.affiliation ? <p>{formatText(settings.affiliation)}</p> : null}
         </div>
-        <div>
+        <div className="footer-contact">
           {settings.contact_email ? (
             <p><ExternalLink href={`mailto:${settings.contact_email}`}>{settings.contact_email}</ExternalLink></p>
           ) : null}

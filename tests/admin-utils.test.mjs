@@ -3,7 +3,7 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createSession, hashPassword, validSession, verifyCredentials } from "../app/lib/admin-auth.ts";
 import { imageType, makeSlug, renderBlogDocument, validatePost } from "../app/lib/blog.ts";
-import { contentOptions, DEFAULT_STUDENT_PHOTO_URL, reorderList, reorderRows, validateOptions, validateRows } from "../app/lib/content-schema.ts";
+import { contentOptions, DEFAULT_STUDENT_PHOTO_URL, renameContentOption, reorderList, reorderRows, validateOptions, validateRows } from "../app/lib/content-schema.ts";
 import { normalizeNews, normalizeProfessorPublications, normalizeResearch, normalizePublications, normalizeStudents } from "../app/lib/content.ts";
 
 test("single admin credentials and signed sessions reject tampering, expiry, and password rotation", () => {
@@ -107,6 +107,33 @@ test("managed groups and categories preserve existing choices and reject duplica
     for (const invalid of [null, "name", [""], [42], ["x".repeat(201)], Array(201).fill("Name")]) assert.throws(() => validateOptions(tab, invalid, []));
     assert.deepEqual(validateOptions(tab, [], [{ [field]: "" }]), []);
   }
+});
+
+test("renaming groups and categories updates all assigned items without changing order or saved data", () => {
+  for (const [tab, field] of [["Students", "group"], ["Publications", "category"]]) {
+    const options = ["First", "Other", "Unused"];
+    const rows = [
+      { [field]: "First", name: "Visible", title: "Visible", display_order: 9, year: 2026 },
+      { [field]: " First ", name: "Hidden", title: "Hidden", visible: false, display_order: 1 },
+      { [field]: "Other", name: "Other item", display_order: 3 },
+      { [field]: "", name: "Unassigned" },
+    ];
+    const savedRows = structuredClone(rows);
+    const renamed = renameContentOption(tab, options, rows, "First", " Renamed ");
+    assert.deepEqual(renamed.options, ["Renamed", "Other", "Unused"]);
+    assert.deepEqual(renamed.rows, rows.map((row, index) => index < 2 ? { ...row, [field]: "Renamed" } : row));
+    assert.deepEqual(validateOptions(tab, renamed.options, validateRows(tab, renamed.rows)), renamed.options, "The combined save must pass API validation.");
+    const unused = renameContentOption(tab, options, rows, "Unused", "Available");
+    assert.deepEqual(unused.options, ["First", "Other", "Available"]);
+    assert.deepEqual(unused.rows, rows);
+    for (const value of ["", "   ", "Other", " Other ", "x".repeat(201)]) {
+      assert.throws(() => renameContentOption(tab, options, rows, "First", value));
+    }
+    assert.throws(() => renameContentOption(tab, options, rows, "Missing", "Renamed"), /existing/);
+    assert.deepEqual(rows, savedRows);
+    assert.deepEqual(options, ["First", "Other", "Unused"]);
+  }
+  assert.throws(() => renameContentOption("Research", ["First"], [], "First", "Renamed"), /existing/);
 });
 
 test("group and category ordering changes sections while preserving member, year, and item order", () => {

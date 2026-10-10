@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 450" fill="none">
+  <rect width="600" height="450" rx="12" fill="#F0F5F1"/>
+  <rect y="174" width="600" height="276" fill="#E6DDD0"/>
+  <path d="M0 174H600" stroke="#B3A791" stroke-width="2"/>
+  <g stroke="#FFF9EE" stroke-linecap="round">
+    <path d="M300 174C302 232 280 280 292 386" stroke-width="8"/>
+    <path d="M300 198C260 218 230 258 205 292M298 220C333 240 355 278 382 318M291 251C264 277 252 314 239 355M292 291C321 314 325 350 345 382" stroke-width="5"/>
+    <path d="M255 238L219 240L183 262M240 258L244 290L218 324M337 247L374 254L402 279M351 273L342 299L366 335M263 296L232 302L207 333M314 318L302 350L313 381M295 340L276 368L266 405" stroke-width="3"/>
+  </g>
+  <path d="M300 177V85" stroke="#477650" stroke-width="7" stroke-linecap="round"/>
+  <path d="M300 122C263 126 240 108 229 81C269 78 294 93 300 122Z" fill="#608C64"/>
+  <path d="M300 101C340 108 365 85 373 60C338 56 311 75 300 101Z" fill="#7B9F70"/>
+  <path d="M301 87C280 71 278 49 288 32C309 45 316 65 301 87Z" fill="#477650"/>
+  <g stroke="#B3A791" stroke-width="2" stroke-dasharray="4 7">
+    <path d="M452 212V390M442 212H462M442 390H462"/>
+  </g>
+  <g fill="#87785E" opacity=".4">
+    <circle cx="96" cy="231" r="3"/><circle cx="151" cy="354" r="3"/><circle cx="420" cy="238" r="3"/><circle cx="490" cy="325" r="3"/><circle cx="368" cy="411" r="3"/><circle cx="81" cy="398" r="3"/>
+  </g>
+  <text x="30" y="36" fill="#255A70" font-family="Arial, sans-serif" font-size="13" letter-spacing="2">ROOT PHENOTYPING</text>
+  <text x="30" y="425" fill="#756A58" font-family="Arial, sans-serif" font-size="12">Example illustration · root architecture</text>
+</svg>

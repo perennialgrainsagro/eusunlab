@@ -12,6 +12,7 @@
     "test": "npm run build && node --test tests/*.test.mjs",
     "lint": "eslint .",
     "db:migrate": "node --experimental-strip-types scripts/migrate-content.ts",
+    "projects:setup": "node --experimental-strip-types db/setup-projects.ts",
     "admin:setup": "node --experimental-strip-types scripts/setup-admin.ts",
     "test:db": "RUN_DB_TESTS=1 node --test tests/admin-db.test.mjs"
   },

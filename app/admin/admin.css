@@ -37,6 +37,8 @@
 .admin-option-list li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .7rem 0; border-bottom: 1px solid #dde3e7; }
 .admin-option-list > li > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .admin-option-list small { display: block; color: #6b7881; font-size: .75rem; }
+.admin-option-actions { display: flex; flex: 0 0 auto; flex-direction: column; gap: .25rem; }
+.admin-option-actions .admin-secondary { padding: .35rem .55rem; font-size: .82rem; }
 .admin-option-add { display: flex; gap: .6rem; }
 .admin-option-add input { min-width: 0; }
 .admin-option-add button { flex: 0 0 auto; }
@@ -103,5 +105,7 @@
   .admin-settings-grid, .admin-fields { padding: 1.1rem; }
   .admin-section-heading { align-items: flex-start; }
   .admin-section-heading h1 { font-size: 1.5rem; }
+  .admin-option-list li { gap: .5rem; }
+  .admin-option-add { flex-direction: column; }
   .admin-login-card { padding: 2rem 1.5rem; }
 }

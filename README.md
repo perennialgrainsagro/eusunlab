@@ -51,15 +51,17 @@ the public website keeps its existing section, category, and year groups.
 New items appear at the top of the list. New News items default to today's date
 in the administrator's browser timezone.
 The Professor tab edits the single profile without add/remove controls.
-Students **Group** and Publications **Category** use dropdowns. Use **Manage
-groups** or **Manage categories** to add or delete names in a popup, then save
+Peoples **Group** and Publications **Category** use dropdowns. Use **Manage
+groups** or **Manage categories** to add, rename, or delete names in a popup, then save
 the section to persist both the list and its items. Existing content supplies
 the initial choices. Names in use cannot be removed until their items are
 assigned to another choice; unused names are kept even when no item uses them.
+Renaming updates every item that uses the name, including hidden items, and keeps
+the group's or category's position in the list. Cancel rename leaves the name unchanged.
 Drag the handles or use the arrow buttons in the popup to reorder groups and
 categories, then save. The dropdowns and public section headings use that order;
 member/item order and publication year order still apply within each section.
-New Students items start with the Aarhus University default portrait URL.
+New Peoples items start with the Aarhus University default portrait URL.
 Saving a blank Photo URL also restores that default; custom photos are retained.
 
 Sessions last eight hours and use signed HttpOnly cookies. Login attempts are
@@ -84,12 +86,30 @@ Use the values generated in .env.local.
 | Students | group, display_order, name, secondary_name, photo_url, status, affiliation, email, personal_url, cv_url, scholar_url, research_topics, visible |
 | Alumni | display_order, name, secondary_name, photo_url, degree, period, current_position, personal_url, visible |
 | Research | display_order, title, summary, details, image_url, image_alt, link_label, link_url, visible |
+| Projects | display_order, title, summary, details, image_url, image_alt, video_url, video_caption, video_captions_url, link_label, link_url, visible |
 | Publications | category, year, display_order, venue, title, authors, paper_url, project_url, code_url, video_url, visible |
 
 Home displays the first three visible `Research` rows, sorted by `display_order`.
 Each card shows `image_url`, `title`, and the first sentence of `summary`, and the entire card links to
 Research. Edit them together under **Research / Home cards** in the dashboard;
 saved changes update both pages.
+
+`/projects` uses the Research layout with Markdown descriptions, inline images,
+and optional video players. Initialize the Projects database section once with
+`npm run projects:setup`; it adds two clearly marked examples and keeps existing
+Projects content when run again. Run it against the target database before deploying
+this page. The original Sheets migration also initializes Projects with these examples.
+Edit, add, hide, and reorder projects under **Projects** in `/admin`.
+The **Details** editor supports headings, lists, links, and `![description](image-url)`;
+**Insert content image** uploads an image and inserts its Markdown into the description.
+**Image URL** controls the image beside the project introduction.
+**Video URL** accepts YouTube watch/share/embed/shorts links or a direct MP4,
+WebM, or Ogg file URL. Video appears below the description with playback controls;
+it does not autoplay. **Video caption** describes the clip below the player;
+**Video captions URL** optionally supplies English WebVTT captions for direct files.
+Video files are hosted externally; the dashboard's uploads remain for images.
+Raw HTML in project descriptions is ignored. The included flower video is an
+external MDN CC0 demonstration clip, not footage from the lab.
 In `Settings`, `hero_image_url` controls the image to the right of the Home
 introduction and `hero_image_alt` supplies its accessible description. Leave
 `hero_image_url` blank to hide it. The Home title, tagline, affiliation, and
@@ -105,7 +125,7 @@ all `ProfessorDetails` sections (`section`, `content`, and `subtext`) and in
 the professor's Publication List. Use `[link text](https://example.com)`;
 bold formatting can be combined with links.
 
-Students groups and publication categories follow the order configured in
+Peoples groups and publication categories follow the order configured in
 the dashboard's **Manage groups** and **Manage categories** dialogs.
 `display_order` sorts members within each group. Publications within a category
 are sorted by year and then by `display_order`.
@@ -144,7 +164,7 @@ on page refresh without rebuilding.
 ## Search engine discovery
 
 `/robots.txt` allows crawling and points to `/sitemap.xml`. The sitemap includes
-the seven public pages and all published blog posts, with each post's last
+the eight public pages and all published blog posts, with each post's last
 updated date. Drafts, admin pages, and API endpoints are excluded from the sitemap.
 Both files use the request's site address and update without rebuilding.
 Admin pages retain their `noindex` metadata.

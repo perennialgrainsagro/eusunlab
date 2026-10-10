@@ -65,6 +65,7 @@ const routes = [
   ["/members/students", "Graduate Student 01"],
   ["/members/alumni", "Alumni Example 01"],
   ["/research", "Human-Centered AI"],
+  ["/projects", "Root Phenotyping for Resilient Crops"],
   ["/publications", "Example Paper"],
   ["/blog", "No blog posts yet"],
 ];
@@ -106,6 +107,21 @@ for (const [pathname, expected] of routes) {
     assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);
   });
 }
+
+test("Projects renders editable example descriptions, inline images, video, and active navigation", async () => {
+  const html = await (await fetch(baseUrl + "/projects")).text();
+  assert.match(html, /<h1>Projects<\/h1>/);
+  const projectLinks = [...html.matchAll(/<a\b[^>]*>/g)].filter(([link]) => /href="\/projects"/.test(link) && /aria-current="page"/.test(link));
+  assert.equal(projectLinks.length, 2);
+  assert.match(html, /<strong>root imaging<\/strong>/);
+  assert.match(html, /src="\/projects\/root-workflow.svg"/);
+  assert.match(html, /<video[^>]*controls=""[^>]*preload="none"/);
+  assert.match(html, /flower.mp4/);
+  assert.match(html, /It is not footage from the lab/);
+  for (const asset of ["root-phenotyping.svg", "root-workflow.svg", "plant-monitoring.svg"]) {
+    assert.equal((await fetch(baseUrl + "/projects/" + asset)).status, 200);
+  }
+});
 
 test("alumni renders without profile images", async () => {
   const response = await fetch(baseUrl + "/members/alumni");
