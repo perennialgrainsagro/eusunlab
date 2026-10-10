@@ -101,6 +101,7 @@ for (const [pathname, expected] of routes) {
     assert.ok(html.toLowerCase().includes(expected.toLowerCase()));
     assert.match(html, /Sample content is shown/);
     assert.match(html, /class="member-trigger"[^>]*>Team<\/button>/);
+    assert.match(html, /class="mobile-lab-name"[^>]*>Eusun Han&#x27;s Lab<\/a>/);
     assert.match(html, /aria-controls="mobile-navigation"/);
     assert.match(html, /<\/header><div class="site-scroll">/);
     assert.doesNotMatch(html, /<details|<summary/i);

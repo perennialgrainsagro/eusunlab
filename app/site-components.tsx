@@ -88,7 +88,7 @@ function Header({ settings, active, memberPage }: {
             <Link className={`nav-link ${active === "publications" ? "active" : ""}`} href="/publications">Publications</Link>
             <Link className={"nav-link " + (active === "blog" ? "active" : "")} href="/blog">Blog</Link>
           </nav>
-          <MobileNavigation active={active} memberPage={memberPage} memberLinks={memberLinks} />
+          <MobileNavigation labName={formatText(settings.lab_name || "Eusun Han Lab")} active={active} memberPage={memberPage} memberLinks={memberLinks} />
         </div>
       </header>
     </>

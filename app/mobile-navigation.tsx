@@ -1,18 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { ActivePage } from "./site-components";
 
-export function MobileNavigation({ active, memberPage, memberLinks }: {
+export function MobileNavigation({ labName, active, memberPage, memberLinks }: {
+  labName: ReactNode;
   active: ActivePage;
   memberPage?: string;
   memberLinks: string[][];
 }) {
   const [open, setOpen] = useState(false);
+  const [showLabName, setShowLabName] = useState(false);
   const close = () => setOpen(false);
 
+  useEffect(() => {
+    const masthead = document.querySelector(".site-masthead");
+    if (!masthead) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      setShowLabName(entry.boundingClientRect.bottom <= 0);
+    });
+    observer.observe(masthead);
+    return () => observer.disconnect();
+  }, []);
+
   return (
+    <>
+    <Link className={"mobile-lab-name" + (showLabName ? " visible" : "")} href="/" onClick={close}>{labName}</Link>
     <div className="mobile-menu">
       <button
         className="menu-toggle"
@@ -49,5 +63,6 @@ export function MobileNavigation({ active, memberPage, memberLinks }: {
         <Link className={active === "blog" ? "active" : ""} href="/blog" onClick={close}>Blog</Link>
       </nav>
     </div>
+    </>
   );
 }
