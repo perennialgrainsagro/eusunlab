@@ -89,8 +89,8 @@ export async function HomePage() {
             {recentPosts.length ? recentPosts.map((post) => (
               <article className="home-blog-item" key={post.id}>
                 {post.published_at ? <time dateTime={post.published_at}>{new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(post.published_at))}</time> : null}
-                <h3><Link href={"/blog/" + encodeURIComponent(post.slug)}>{post.title}</Link></h3>
-                {post.excerpt ? <p>{post.excerpt}</p> : null}
+                <h3 className="linked-content">{formatText(post.title)}<Link className="content-link-overlay" href={"/blog/" + encodeURIComponent(post.slug)} aria-label={plainText(post.title)} /></h3>
+                {post.excerpt ? <p>{formatText(post.excerpt)}</p> : null}
               </article>
             )) : <p className="home-blog-empty">No blog posts yet.</p>}
           </div>
@@ -100,7 +100,7 @@ export async function HomePage() {
           <section className="home-card-section" aria-label="Research areas">
             <div className="home-card-grid">
               {cards.map((card, index) => (
-                <Link href={`/research#research-${index + 1}`} className="home-card" key={`${card.title}-${index}`}>
+                <article className="home-card linked-content" key={`${card.title}-${index}`}>
                   <FallbackImage
                     src={card.image_url}
                     alt={plainText(card.image_alt || card.title)}
@@ -110,7 +110,8 @@ export async function HomePage() {
                     <h2>{formatText(card.title)}</h2>
                     {card.summary ? <p>{formatText(firstSentence(card.summary))}</p> : null}
                   </div>
-                </Link>
+                  <Link href={`/research#research-${index + 1}`} className="content-link-overlay" aria-label={plainText(card.title)} />
+                </article>
               ))}
             </div>
           </section>
@@ -192,7 +193,7 @@ export async function ProfessorPage() {
         <div className="container">
           {sections.map((section) => (
             <section className="detail-section" key={section}>
-              <h2>{formatText(section, true)}</h2>
+              <h2>{formatText(section)}</h2>
               {section === "Publication List" ? (
                 publicationsResult.data.length ? (
                   <div className="professor-publications">
@@ -202,7 +203,7 @@ export async function ProfessorPage() {
                         {/* eslint-disable-next-line jsx-a11y/no-redundant-roles -- Preserve list semantics when CSS suppresses native markers. */}
                         <ol className="professor-publication-list" role="list">
                           {publicationsResult.data.filter((item) => item.category === category).map((item, index) => (
-                            <li key={index}><span>{formatText(item.content, true)}</span></li>
+                            <li key={index}><span>{formatText(item.content)}</span></li>
                           ))}
                         </ol>
                       </section>
@@ -213,8 +214,8 @@ export async function ProfessorPage() {
                 <ul className="detail-list">
                   {details.filter((item) => item.section === section).map((item, index) => (
                     <li className="detail-item" key={`${item.content}-${index}`}>
-                      <p>{formatText(item.content, true)}</p>
-                      {item.subtext ? <p className="subtext">{formatText(item.subtext, true)}</p> : null}
+                      <p>{formatText(item.content)}</p>
+                      {item.subtext ? <p className="subtext">{formatText(item.subtext)}</p> : null}
                       <ExternalLink href={item.link_url} className="text-link">
                         {formatText(item.link_label || "View")} →
                       </ExternalLink>

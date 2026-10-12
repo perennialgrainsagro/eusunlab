@@ -2,12 +2,13 @@ import { createElement, type ReactNode } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { contentUrl } from "./content-schema.ts";
+import { plainText } from "./format-text.ts";
 
 export type BlogInput = { title: string; writer_name: string; slug: string; excerpt: string; main_image_url: string; main_image_alt: string; body: string; published: boolean };
 export type BlogPost = BlogInput & { id: string; published_at: string | null; created_at: string; updated_at: string };
 
 export function makeSlug(title: string) {
-  return title.toLowerCase().trim().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0, 120).replace(/-$/, "");
+  return plainText(title).toLowerCase().trim().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0, 120).replace(/-$/, "");
 }
 
 export function validatePost(value: unknown): BlogInput {

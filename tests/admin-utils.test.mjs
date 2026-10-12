@@ -41,6 +41,7 @@ test("blog Markdown supports formatting and images while excluding HTML and unsa
   assert.match(html, /src="\/media\/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"/);
   assert.doesNotMatch(html, /<script|javascript:/i);
   assert.equal(makeSlug("한글 Blog Title"), "한글-blog-title");
+  assert.equal(makeSlug("**한글** [Blog Title](https://example.com)"), "한글-blog-title");
   assert.throws(() => validatePost({ ...post, slug: "../admin" }));
   assert.throws(() => validatePost({ ...post, writer_name: "" }));
   assert.throws(() => validatePost({ ...post, body: "x".repeat(300001) }));

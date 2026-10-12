@@ -66,7 +66,7 @@ Saving a blank Photo URL also restores that default; custom photos are retained.
 The Members page shows one profile per row, grouped by **Group**, with a portrait
 beside the profile details. **Short bio / What they do** is optional and describes
 the member's research or role in the lab. Put each paragraph on a new line and
-use `**text**` for bold; saved introductions appear below the research topics.
+use `**text**` for bold and `[text](url)` for links; saved introductions appear below the research topics.
 
 Sessions last eight hours and use signed HttpOnly cookies. Login attempts are
 limited in the database. All admin write endpoints check login and request
@@ -124,10 +124,16 @@ Wrap words in `**double asterisks**` to display them in bold, for example
 `Our paper was accepted at **NeurIPS 2026**.` This works in displayed text,
 including news, profiles, research, publication authors, and link labels.
 Keep each bold phrase on one line. Put each paragraph on a new line; HTML and
-other Markdown formatting are not rendered. Inline hyperlinks are additionally supported in
-all `ProfessorDetails` sections (`section`, `content`, and `subtext`) and in
-the professor's Publication List. Use `[link text](https://example.com)`;
-bold formatting can be combined with links.
+other Markdown formatting are not rendered outside Blog articles and Projects details.
+Inline hyperlinks work in all displayed text fields, including Settings, News,
+profiles, groups, categories, Research, Projects, Publications, and Blog titles,
+writer names, and summaries. Use `[link text](https://example.com)`; bold formatting
+can be combined with links. Research cards and Blog titles keep their navigation
+links while inline links open their own destinations. Link labels can contain
+inline links even when their separate URL field is empty; labels without inline
+links use the destination from that URL field.
+Image descriptions and metadata use plain text with formatting markers removed.
+URL, email, date, number, and Blog URL fields keep their usual input formats.
 
 Members groups and publication categories follow the order configured in
 the dashboard's **Manage groups** and **Manage categories** dialogs.

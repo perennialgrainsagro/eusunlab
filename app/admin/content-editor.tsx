@@ -7,6 +7,7 @@ import { choiceField, contentOptions, contentTabs, contentUrl, DEFAULT_STUDENT_P
 import type { SheetRow } from "../lib/types.ts";
 import { FallbackImage } from "../fallback-image";
 import { uploadImage } from "./upload";
+import { plainText } from "../lib/format-text.ts";
 
 const MDEditor = dynamic(() => import("@uiw/react-md-editor/nohighlight"), { ssr: false, loading: () => <p>Loading editor…</p> });
 
@@ -20,7 +21,7 @@ function dateValue(value: unknown) {
   return text.slice(0, 10);
 }
 function rowName(row: SheetRow, index: number) {
-  return String(row.title || row.name || row.section || row.content || "Item " + (index + 1)).replaceAll("**", "").slice(0, 100);
+  return plainText(String(row.title || row.name || row.section || row.content || "Item " + (index + 1))).slice(0, 100);
 }
 type SortTarget = { kind: "item" | "option"; index: number };
 
@@ -151,7 +152,7 @@ export function ContentEditor({ record, onSaved, onDirty }: {
           kind === "textarea" || (name === "value" && ["introduction", "research_intro", "publications_intro"].includes(settingKey)) ? (
             <textarea id={id} value={String(row[name] ?? "")} rows={4} onChange={(event) => updateCell(index, name, event.target.value)} maxLength={30000} aria-describedby={name === "short_bio" ? id + "-hint" : undefined} placeholder={name === "short_bio" ? "Introduce this member and describe their research or role in the lab." : undefined} />
           ) : <input id={id} type={kind === "url" ? "text" : kind} inputMode={kind === "url" ? "url" : undefined} value={kind === "date" ? dateValue(row[name]) : String(row[name] ?? "")} onChange={(event) => updateCell(index, name, event.target.value)} />}
-        {name === "short_bio" ? <p id={id + "-hint"}>Optional. Shown in the Members list. Put each paragraph on a new line; use **text** for bold.</p> : null}
+        {name === "short_bio" ? <p id={id + "-hint"}>Optional. Shown in the Members list. Put each paragraph on a new line; use **text** for bold and [text](url) for links.</p> : null}
         {projectDetails ? <div className="admin-image-field">
           <p>Use Markdown for headings, lists, links, and images. Upload an image to insert it at the end of the description.</p>
           <label htmlFor={id + "-file"} className="admin-upload-label">Insert content image <span>(JPEG, PNG, WebP or GIF · up to 3 MB)</span></label>

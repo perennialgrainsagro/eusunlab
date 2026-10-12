@@ -48,6 +48,7 @@ export function AdminDashboard({ initialContent, initialPosts }: { initialConten
           <button className={tab === "Blog" ? "active" : ""} aria-current={tab === "Blog" ? "page" : undefined} type="button" onClick={() => switchTab("Blog")}>Blog</button>
         </nav>
         <main className="admin-main">
+          <p className="admin-formatting-hint">Text fields support <code>**text**</code> for bold and <code>[text](https://example.com)</code> for links. Formatting appears on the website after saving. Enter URLs, email addresses, and dates in their usual format.</p>
           {error ? <p className="admin-error" role="alert">{error}</p> : null}
           {tab === "Blog" ? <BlogEditor posts={posts} onPosts={setPosts} onDirty={setDirty} /> : record ? (
             <ContentEditor key={record.tab} record={record} onDirty={setDirty} onSaved={(saved) => {

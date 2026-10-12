@@ -152,7 +152,7 @@ test("Home cards link to matching Research sections and share their titles, summ
   const [html, researchHtml] = await Promise.all(
     ["/", "/research"].map(async (pathname) => (await fetch(baseUrl + pathname)).text()),
   );
-  const cards = [...html.matchAll(/<a[^>]*class="home-card"[^>]*>([\s\S]*?)<\/a>/g)];
+  const cards = [...html.matchAll(/<article class="home-card linked-content">([\s\S]*?)<\/article>/g)];
   const research = [...researchHtml.matchAll(/<article[^>]*class="research-item[^"]*"[^>]*>([\s\S]*?)<\/article>/g)];
   assert.equal(cards.length, 3);
   for (const [index, card] of cards.entries()) {

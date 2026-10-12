@@ -8,6 +8,7 @@ import { makeSlug, type BlogInput, type BlogPost } from "../lib/blog.ts";
 import { contentUrl } from "../lib/content-schema.ts";
 import { FallbackImage } from "../fallback-image";
 import { uploadImage } from "./upload";
+import { plainText } from "../lib/format-text.ts";
 
 const MDEditor = dynamic(() => import("@uiw/react-md-editor/nohighlight"), { ssr: false, loading: () => <p>Loading editor…</p> });
 type Draft = BlogInput & { id?: string; updated_at?: string };
@@ -92,7 +93,7 @@ export function BlogEditor({ posts, onPosts, onDirty }: {
       <div className="admin-section-heading"><div><h1>Blog</h1><p>Write an article, add images, and publish when ready.</p></div><button className="admin-secondary" type="button" onClick={startNew} disabled={busy}>+ New post</button></div>
       <div className="admin-content-layout admin-blog-layout">
         <aside className="admin-item-list" aria-label="Blog posts">
-          {posts.map((post) => <button key={post.id} type="button" className={draft.id === post.id ? "active" : ""} disabled={busy} onClick={() => void openPost(post.id)}><span>{post.title}</span><small>{post.published ? "Published" : "Draft"}</small></button>)}
+          {posts.map((post) => <button key={post.id} type="button" className={draft.id === post.id ? "active" : ""} disabled={busy} onClick={() => void openPost(post.id)}><span>{plainText(post.title)}</span><small>{post.published ? "Published" : "Draft"}</small></button>)}
           {!posts.length ? <p>No posts yet.</p> : null}
         </aside>
         <form className="admin-fields" onSubmit={save}>

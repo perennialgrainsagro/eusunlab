@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import type { ReactNode } from "react";
+import { isValidElement, type ReactNode } from "react";
 import { FallbackImage } from "./fallback-image";
 import type { Settings } from "./lib/types";
 import { formatText, plainText } from "./lib/format-text";
@@ -8,11 +8,16 @@ import { MobileNavigation } from "./mobile-navigation";
 
 export type ActivePage = "home" | "members" | "research" | "projects" | "publications" | "blog";
 
+function containsLink(node: ReactNode): boolean {
+  return Array.isArray(node) ? node.some(containsLink) : isValidElement<{ children?: ReactNode }>(node) && (node.type === "a" || containsLink(node.props.children));
+}
+
 export function ExternalLink({ href, children, className }: {
   href: string;
   children: ReactNode;
   className?: string;
 }) {
+  if (containsLink(children)) return <span className={className}>{children}</span>;
   if (!href) return null;
   const external = href.startsWith("http");
   return (
@@ -88,7 +93,7 @@ function Header({ settings, active, memberPage }: {
             <Link className={`nav-link ${active === "publications" ? "active" : ""}`} href="/publications">Publications</Link>
             <Link className={"nav-link " + (active === "blog" ? "active" : "")} href="/blog">Blog</Link>
           </nav>
-          <MobileNavigation labName={formatText(settings.lab_name || "Eusun Han Lab")} active={active} memberPage={memberPage} memberLinks={memberLinks} />
+          <MobileNavigation labName={formatText(settings.lab_name || "Eusun Han Lab", false)} active={active} memberPage={memberPage} memberLinks={memberLinks} />
         </div>
       </header>
     </>

@@ -30,6 +30,7 @@ test("renders inline bold safely and removes markers from plain-text attributes"
     ["", ""],
     ["Plain text", "Plain text"],
     ["Accepted at **NeurIPS 2026**.", "Accepted at <strong>NeurIPS 2026</strong>."],
+    ["** text **", "<strong> text </strong>"],
     ["**홍길동**, **Eusun Han**", "<strong>홍길동</strong>, <strong>Eusun Han</strong>"],
     ["**First****Second**", "<strong>First</strong><strong>Second</strong>"],
     ["**First**\r\n**Second**", "<strong>First</strong>\r\n<strong>Second</strong>"],
@@ -45,7 +46,7 @@ test("renders inline bold safely and removes markers from plain-text attributes"
   assert.equal(plainText("**Unclosed"), "**Unclosed");
 });
 
-test("Home summaries stop after the first sentence and retain inline bold", () => {
+test("Home summaries stop after the first visible sentence and retain complete bold and links", () => {
   for (const [text, expected] of [
     ["   ", ""],
     ["One summary without punctuation", "One summary without punctuation"],
@@ -56,6 +57,10 @@ test("Home summaries stop after the first sentence and retain inline bold", () =
     ["Value is 3.14. More details.", "Value is 3.14."],
     ["First **bold sentence.** More details.", "First **bold sentence.**"],
     ["**First sentence. Second sentence.**", "**First sentence.**"],
+    ["See [the lab](https://lab.example/about). More details.", "See [the lab](https://lab.example/about)."],
+    ["[First sentence. Second sentence.](https://example.com)", "[First sentence.](https://example.com)"],
+    ["[**First sentence. Second sentence.**](https://example.com)", "[**First sentence.**](https://example.com)"],
+    ["**Read [the lab](https://example.com). More details.**", "**Read [the lab](https://example.com).**"],
   ]) assert.equal(firstSentence(text), expected);
   assert.equal(renderToStaticMarkup(createElement("p", null, formatText(firstSentence("**First sentence. Second sentence.**")))), "<p><strong>First sentence.</strong></p>");
 });
@@ -74,14 +79,15 @@ test("renders inline links and bold safely, including the supplied publication c
     ["<script> [<b>Paper</b>](https://example.com?a=1&b=2)", "&lt;script&gt; " + link("&lt;b&gt;Paper&lt;/b&gt;", "https://example.com?a=1&amp;b=2")],
   ];
   for (const [input, expected] of cases) {
-    assert.equal(renderToStaticMarkup(createElement("p", null, formatText(input, true))), `<p>${expected}</p>`);
+    assert.equal(renderToStaticMarkup(createElement("p", null, formatText(input))), `<p>${expected}</p>`);
   }
   const citation = "Zhang Y, Richetti J, Vogeler I, Cammarano D, **Han E** (2027) Requirements and challenges of process-based modeling for intermediate wheatgrass, a perennial cereal. European Journal of Agronomy 182:128350. [https://doi.org/10.1016/j.eja.2026.128350](https://doi.org/10.1016/j.eja.2026.128350)";
-  const html = renderToStaticMarkup(createElement("li", null, formatText(citation, true)));
+  const html = renderToStaticMarkup(createElement("li", null, formatText(citation)));
   assert.match(html, /<strong>Han E<\/strong> \(2027\)/);
   assert.ok(html.includes(link("https://doi.org/10.1016/j.eja.2026.128350", "https://doi.org/10.1016/j.eja.2026.128350")));
   assert.equal(plainText("**Read [DOI](https://example.com)**"), "Read DOI");
-  assert.equal(renderToStaticMarkup(createElement("a", { href: "https://example.com" }, formatText("[**Paper**](https://example.com)"))), '<a href="https://example.com">[<strong>Paper</strong>](https://example.com)</a>');
+  assert.equal(renderToStaticMarkup(createElement("a", { href: "https://example.com" }, formatText("[**Paper**](https://example.com)", false))), '<a href="https://example.com"><strong>Paper</strong></a>');
+  assert.equal(renderToStaticMarkup(createElement("a", { href: "/" }, formatText("**[Lab](https://example.com)**", false))), '<a href="/"><strong>Lab</strong></a>');
 });
 
 test("parses Google Visualization rows using row-one headers", () => {

@@ -25,6 +25,7 @@
 .admin-sidebar button:hover { background: #e9eef2; }
 .admin-sidebar button.active { background: #e0ebf3; color: #123e60; font-weight: 700; }
 .admin-main { min-width: 0; padding: 2rem; }
+.admin-formatting-hint { margin: 0 0 1.5rem; color: #526c7a; font-size: .85rem; }
 .admin-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
 .admin-section-heading h1 { margin-bottom: .35rem; font-size: 1.75rem; }
 .admin-section-heading p { margin: 0; color: #6b7881; font-size: .85rem; }
