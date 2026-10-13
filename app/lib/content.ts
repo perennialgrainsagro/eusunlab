@@ -24,6 +24,7 @@ import type {
   Student,
 } from "./types.ts";
 import { contentUrl, DEFAULT_STUDENT_PHOTO_URL, type ContentTab } from "./content-schema.ts";
+import { makeSlug } from "./blog.ts";
 
 type GvizCell = { v?: unknown; f?: string } | null;
 type GvizPayload = {
@@ -264,19 +265,28 @@ export function normalizeResearch(rows: SheetRow[]): ResearchItem[] {
 }
 
 export function normalizeProjects(rows: SheetRow[]): ProjectItem[] {
-  return byOrder(visibleRows(rows).map((row) => ({
-    display_order: asOrder(row.display_order),
-    title: asText(row.title),
-    summary: asText(row.summary),
-    details: asText(row.details),
-    image_url: safeUrl(row.image_url, false),
-    image_alt: asText(row.image_alt),
-    video_url: safeUrl(row.video_url, false),
-    video_caption: asText(row.video_caption),
-    video_captions_url: safeUrl(row.video_captions_url, false),
-    link_label: asText(row.link_label),
-    link_url: safeUrl(row.link_url),
-  })).filter((item) => item.title));
+  const slugs = new Set<string>();
+  return byOrder(visibleRows(rows).filter((row) => asText(row.title)).map((row) => {
+    const base = makeSlug(asText(row.title)) || "project";
+    let slug = base;
+    for (let suffix = 2; slugs.has(slug); suffix++) slug = `${base}-${suffix}`;
+    slugs.add(slug);
+    return {
+      slug,
+      preview_image_url: safeUrl(row.preview_image_url, false),
+      display_order: asOrder(row.display_order),
+      title: asText(row.title),
+      summary: asText(row.summary),
+      details: asText(row.details),
+      image_url: safeUrl(row.image_url, false),
+      image_alt: asText(row.image_alt),
+      video_url: safeUrl(row.video_url, false),
+      video_caption: asText(row.video_caption),
+      video_captions_url: safeUrl(row.video_captions_url, false),
+      link_label: asText(row.link_label),
+      link_url: safeUrl(row.link_url),
+    };
+  }));
 }
 
 export function normalizePublications(rows: SheetRow[], options?: string[] | null): Publication[] {

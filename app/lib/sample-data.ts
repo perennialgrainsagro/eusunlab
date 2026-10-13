@@ -204,6 +204,8 @@ export const sampleResearch: ResearchItem[] = [
 
 export const sampleProjects: ProjectItem[] = [
   {
+    slug: "root-phenotyping-for-resilient-crops",
+    preview_image_url: "",
     display_order: 1,
     title: "Root Phenotyping for Resilient Crops",
     summary: "Connecting root architecture with water and nutrient use through imaging and trait analysis.",
@@ -217,6 +219,8 @@ export const sampleProjects: ProjectItem[] = [
     link_url: "",
   },
   {
+    slug: "image-based-plant-growth-monitoring",
+    preview_image_url: "",
     display_order: 2,
     title: "Image-Based Plant Growth Monitoring",
     summary: "Following plant development over time with repeated imaging and accessible visual summaries.",

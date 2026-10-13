@@ -90,7 +90,7 @@ Use the values generated in .env.local.
 | Students | group, display_order, name, secondary_name, photo_url, status, affiliation, email, personal_url, cv_url, scholar_url, research_topics, short_bio, visible |
 | Alumni | display_order, name, secondary_name, photo_url, degree, period, current_position, personal_url, visible |
 | Research | display_order, title, summary, details, image_url, image_alt, link_label, link_url, visible |
-| Projects | display_order, title, summary, details, image_url, image_alt, video_url, video_caption, video_captions_url, link_label, link_url, visible |
+| Projects | display_order, title, summary, preview_image_url, details, image_url, image_alt, video_url, video_caption, video_captions_url, link_label, link_url, visible |
 | Publications | category, year, display_order, venue, title, authors, paper_url, project_url, code_url, video_url, visible |
 
 Home displays the first three visible `Research` rows, sorted by `display_order`.
@@ -98,15 +98,27 @@ Each card shows `image_url`, `title`, and the first sentence of `summary`, and t
 Research. Edit them together under **Research / Home cards** in the dashboard;
 saved changes update both pages.
 
-`/projects` uses the Research layout with Markdown descriptions, inline images,
-and optional video players. Initialize the Projects database section once with
+`/projects` lists clickable previews with each project's image, title, and a short
+summary. Each entry opens `/projects/<title-slug>` with the full Markdown description,
+inline images, optional video, and related link. Titles generate the URL, so renaming
+a project changes its address. Initialize the Projects database section once with
 `npm run projects:setup`; it adds two clearly marked examples and keeps existing
 Projects content when run again. Run it against the target database before deploying
 this page. The original Sheets migration also initializes Projects with these examples.
 Edit, add, hide, and reorder projects under **Projects** in `/admin`.
 The **Details** editor supports headings, lists, links, and `![description](image-url)`;
-**Insert content image** uploads an image and inserts its Markdown into the description.
-**Image URL** controls the image beside the project introduction.
+Place the cursor in **Details**, then click the editor's **Upload and insert image**
+toolbar button or use **Insert content image** below it. Uploads insert at that
+position without removing surrounding text; the live preview displays the image.
+Files use the existing upload storage and permanent `/media/...` addresses,
+so no URL needs to be entered and images still work after saving and refreshing.
+Click **Save changes** to persist the updated description.
+**Preview image** accepts an image URL or **Upload preview image** for the Projects
+list only. Leave it empty to use **Image URL** (the detail-page cover), then the
+first inline Markdown image in **Details**. With no images, the list shows
+**Preview coming soon**. Save changes after uploading to apply the preview.
+Dropbox file-sharing links are rendered with `raw=1` automatically for images,
+preserving access parameters; ordinary links still open the Dropbox sharing page.
 **Video URL** accepts YouTube watch/share/embed/shorts links or a direct MP4,
 WebM, or Ogg file URL. Video appears below the description with playback controls;
 it does not autoplay. **Video caption** describes the clip below the player;
@@ -174,7 +186,7 @@ on page refresh without rebuilding.
 ## Search engine discovery
 
 `/robots.txt` allows crawling and points to `/sitemap.xml`. The sitemap includes
-the eight public pages and all published blog posts, with each post's last
+the eight public pages, visible project detail pages, and all published blog posts, with each post's last
 updated date. Drafts, admin pages, and API endpoints are excluded from the sitemap.
 Both files use the request's site address and update without rebuilding.
 Admin pages retain their `noindex` metadata.

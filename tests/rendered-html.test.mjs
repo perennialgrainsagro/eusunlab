@@ -87,7 +87,7 @@ test("robots and sitemap use the current site address and include only public pa
     const xml = await sitemap.text();
     assert.match(xml, /xmlns="http:\/\/www.sitemaps.org\/schemas\/sitemap\/0.9"/);
     const urls = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1]);
-    assert.deepEqual(urls, routes.map(([path]) => new URL(path, origin).href));
+    assert.deepEqual(urls, [...routes.map(([path]) => new URL(path, origin).href), ...["root-phenotyping-for-resilient-crops", "image-based-plant-growth-monitoring"].map((slug) => new URL(`/projects/${slug}`, origin).href)]);
     assert.doesNotMatch(xml, /\/admin|\/api\//);
   }
 });
@@ -109,19 +109,43 @@ for (const [pathname, expected] of routes) {
   });
 }
 
-test("Projects renders editable example descriptions, inline images, video, and active navigation", async () => {
+test("Projects lists linked previews, titles, and summaries without the full descriptions or videos", async () => {
   const html = await (await fetch(baseUrl + "/projects")).text();
   assert.match(html, /<h1>Projects<\/h1>/);
   const projectLinks = [...html.matchAll(/<a\b[^>]*>/g)].filter(([link]) => /href="\/projects"/.test(link) && /aria-current="page"/.test(link));
   assert.equal(projectLinks.length, 2);
-  assert.match(html, /<strong>root imaging<\/strong>/);
-  assert.match(html, /src="\/projects\/root-workflow.svg"/);
-  assert.match(html, /<video[^>]*controls=""[^>]*preload="none"/);
-  assert.match(html, /flower.mp4/);
-  assert.match(html, /It is not footage from the lab/);
+  assert.match(html, /src="\/projects\/root-phenotyping.svg"/);
+  assert.match(html, /src="\/projects\/plant-monitoring.svg"/);
+  assert.match(html, /Connecting root architecture with water and nutrient use/);
+  assert.match(html, /href="\/projects\/root-phenotyping-for-resilient-crops"/);
+  assert.match(html, /href="\/projects\/image-based-plant-growth-monitoring"/);
+  assert.doesNotMatch(html, /<video|<iframe|<h3>Project overview|root-workflow\.svg|flower\.mp4|It is not footage from the lab/);
   for (const asset of ["root-phenotyping.svg", "root-workflow.svg", "plant-monitoring.svg"]) {
     assert.equal((await fetch(baseUrl + "/projects/" + asset)).status, 200);
   }
+});
+
+test("project detail URLs render their own full content, media, metadata, and return link", async () => {
+  const root = await fetch(baseUrl + "/projects/root-phenotyping-for-resilient-crops");
+  assert.equal(root.status, 200);
+  const rootHtml = await root.text();
+  assert.match(rootHtml, /<h1>Root Phenotyping for Resilient Crops<\/h1>/);
+  assert.match(rootHtml, /<title>Root Phenotyping for Resilient Crops<\/title>/);
+  assert.match(rootHtml, /<strong>root imaging<\/strong>/);
+  assert.match(rootHtml, /src="\/projects\/root-workflow.svg"/);
+  assert.match(rootHtml, /href="\/projects">← All projects<\/a>/);
+  assert.ok([...rootHtml.matchAll(/<a\b[^>]*>/g)].some(([link]) => /href="\/projects"/.test(link) && /aria-current="page"/.test(link)));
+  assert.doesNotMatch(rootHtml, /Image-Based Plant Growth Monitoring|flower\.mp4/);
+
+  const growth = await fetch(baseUrl + "/projects/image-based-plant-growth-monitoring");
+  assert.equal(growth.status, 200);
+  const growthHtml = await growth.text();
+  assert.match(growthHtml, /<h1>Image-Based Plant Growth Monitoring<\/h1>/);
+  assert.match(growthHtml, /<video[^>]*controls=""[^>]*preload="none"/);
+  assert.match(growthHtml, /flower.mp4/);
+  assert.match(growthHtml, /It is not footage from the lab/);
+  assert.doesNotMatch(growthHtml, /Root Phenotyping for Resilient Crops/);
+  assert.equal((await fetch(baseUrl + "/projects/missing-project")).status, 404);
 });
 
 test("alumni renders without profile images", async () => {

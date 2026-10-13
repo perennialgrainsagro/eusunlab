@@ -88,6 +88,8 @@ export type ResearchItem = {
 };
 
 export type ProjectItem = ResearchItem & {
+  slug: string;
+  preview_image_url: string;
   video_url: string;
   video_caption: string;
   video_captions_url: string;

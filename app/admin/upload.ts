@@ -7,3 +7,10 @@ export async function uploadImage(file: File) {
   if (!response.ok) throw new Error(result.error || "Unable to upload image.");
   return result.url as string;
 }
+
+export function insertContentImage(text: string, url: string, position: number) {
+  const image = `\n\n![Project image](${url})\n\n`;
+  const value = text.slice(0, position) + image + text.slice(position);
+  if (value.length > 30000) throw new Error("Keep the project description under 30,000 characters.");
+  return { value, cursor: position + image.length };
+}

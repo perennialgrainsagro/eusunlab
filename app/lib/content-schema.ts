@@ -11,7 +11,7 @@ export const contentTabs = {
   Students: { label: "Members", fields: ["group", "display_order", "name", "secondary_name", "photo_url", "status", "affiliation", "email", "personal_url", "cv_url", "scholar_url", "research_topics", "short_bio", "visible"] },
   Alumni: { label: "Alumni", fields: ["display_order", "name", "secondary_name", "photo_url", "degree", "period", "current_position", "personal_url", "visible"] },
   Research: { label: "Research / Home cards", fields: ["display_order", "title", "summary", "details", "image_url", "image_alt", "link_label", "link_url", "visible"] },
-  Projects: { label: "Projects", fields: ["display_order", "title", "summary", "details", "image_url", "image_alt", "video_url", "video_caption", "video_captions_url", "link_label", "link_url", "visible"] },
+  Projects: { label: "Projects", fields: ["display_order", "title", "summary", "preview_image_url", "details", "image_url", "image_alt", "video_url", "video_caption", "video_captions_url", "link_label", "link_url", "visible"] },
   Publications: { label: "Publications", fields: ["category", "year", "display_order", "venue", "title", "authors", "paper_url", "project_url", "code_url", "video_url", "visible"] },
 } as const;
 
@@ -81,6 +81,7 @@ export function fieldKind(name: string) {
 
 export function fieldLabel(name: string) {
   if (name === "short_bio") return "Short bio / What they do";
+  if (name === "preview_image_url") return "Preview image";
   return name.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
@@ -95,6 +96,25 @@ export function contentUrl(value: unknown, allowMailto = false) {
   } catch {
     return "";
   }
+}
+
+export function imageUrl(value: unknown) {
+  const input = contentUrl(value);
+  if (!input) return "";
+  const url = new URL(input, "https://local.invalid");
+  if (["dropbox.com", "www.dropbox.com"].includes(url.hostname) && /^\/(?:s|scl\/fi)\//.test(url.pathname)) {
+    // Dropbox sharing links return an HTML preview unless raw rendering is requested.
+    url.searchParams.delete("dl");
+    url.searchParams.set("raw", "1");
+    return url.href;
+  }
+  return input;
+}
+
+export function markdownUrl(url: string, key: string) {
+  if (key === "src") return imageUrl(url);
+  if (key === "href" && (/^\/(?![/\\])/.test(url) || url.startsWith("#"))) return url;
+  return contentUrl(url, key === "href");
 }
 
 export function projectVideo(value: unknown): { kind: "file" | "youtube"; url: string } | null {
@@ -120,7 +140,7 @@ export function validateRows(tab: ContentTab, value: unknown): SheetRow[] {
       if (!["string", "number", "boolean"].includes(typeof cell)) throw new Error("Invalid value for " + field + ".");
       if (typeof cell === "string" && cell.length > 30000) throw new Error(fieldLabel(field) + " is too long.");
       if (fieldKind(field) === "number" && cell !== "" && !Number.isFinite(Number(cell))) throw new Error("Invalid number for " + field + ".");
-      if (field.endsWith("_url") && cell && !contentUrl(String(cell), !["image_url", "photo_url"].includes(field))) {
+      if (field.endsWith("_url") && cell && !contentUrl(String(cell), !["image_url", "preview_image_url", "photo_url"].includes(field))) {
         throw new Error("Use a valid HTTP or HTTPS URL for " + fieldLabel(field) + ".");
       }
       if (tab === "Projects" && field === "video_url" && cell && !projectVideo(String(cell))) {

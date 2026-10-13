@@ -15,8 +15,7 @@ import {
 import type { Publication, Student } from "./lib/types";
 import { firstSentence, formatText, plainText } from "./lib/format-text";
 import { listPosts } from "./lib/database.ts";
-import { renderBlogDocument } from "./lib/blog.ts";
-import { projectVideo } from "./lib/content-schema.ts";
+import { projectPreview } from "./lib/projects.ts";
 import {
   ExternalLink,
   FallbackImage,
@@ -371,30 +370,15 @@ export async function ProjectsPage() {
       <section className="section">
         <div className="container research-list">
           {projectsResult.data.length ? projectsResult.data.map((item, index) => {
-            const video = projectVideo(item.video_url);
+            const preview = projectPreview(item);
             return (
-              <article id={`project-${index + 1}`} className={`research-item project-item ${item.image_url ? "" : "no-image"}`} key={`${item.title}-${index}`}>
-                {item.image_url ? <FallbackImage src={item.image_url} alt={plainText(item.image_alt || item.title)} className="content-image" /> : null}
+              <article id={`project-${index + 1}`} className="research-item project-item linked-content" key={item.slug}>
+                <FallbackImage src={preview.src} alt={plainText(preview.alt)} className="content-image project-thumbnail" placeholder="Preview coming soon" />
                 <div className="research-copy project-copy">
                   <h2>{formatText(item.title)}</h2>
                   {item.summary ? <p className="summary">{formatText(item.summary)}</p> : null}
-                  <div className="blog-body project-body">{renderBlogDocument(item.details)}</div>
-                  {video ? (
-                    <figure className="project-video">
-                      {video.kind === "youtube" ? (
-                        <iframe src={video.url} title={plainText(item.title) + " video"} loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
-                      ) : (
-                        // eslint-disable-next-line jsx-a11y/media-has-caption -- Caption tracks render when a URL is provided.
-                        <video src={video.url} controls playsInline preload="none" aria-label={plainText(item.title) + " video"}>
-                          {item.video_captions_url ? <track kind="captions" src={item.video_captions_url} srcLang="en" label="English" default /> : null}
-                          Your browser cannot play this video. <a href={video.url}>Download the video</a>.
-                        </video>
-                      )}
-                      {item.video_caption ? <figcaption>{formatText(item.video_caption)}</figcaption> : null}
-                    </figure>
-                  ) : null}
-                  <ExternalLink href={item.link_url} className="text-link">{formatText(item.link_label || "Learn more")} →</ExternalLink>
                 </div>
+                <Link href={`/projects/${encodeURIComponent(item.slug)}`} className="content-link-overlay" aria-label={plainText(item.title)} />
               </article>
             );
           }) : <EmptyState>Projects will be added soon.</EmptyState>}

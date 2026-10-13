@@ -3,10 +3,10 @@
 import dynamic from "next/dynamic";
 import rehypeSanitize from "rehype-sanitize";
 import { useRef, useState, type FormEvent, type PointerEvent } from "react";
-import { choiceField, contentOptions, contentTabs, contentUrl, DEFAULT_STUDENT_PHOTO_URL, fieldKind, fieldLabel, renameContentOption, reorderList, reorderRows, validateOptions, type ContentRecord } from "../lib/content-schema.ts";
+import { choiceField, contentOptions, contentTabs, contentUrl, DEFAULT_STUDENT_PHOTO_URL, fieldKind, fieldLabel, markdownUrl, renameContentOption, reorderList, reorderRows, validateOptions, type ContentRecord } from "../lib/content-schema.ts";
 import type { SheetRow } from "../lib/types.ts";
 import { FallbackImage } from "../fallback-image";
-import { uploadImage } from "./upload";
+import { insertContentImage, uploadImage } from "./upload";
 import { plainText } from "../lib/format-text.ts";
 
 const MDEditor = dynamic(() => import("@uiw/react-md-editor/nohighlight"), { ssr: false, loading: () => <p>Loading editor…</p> });
@@ -40,6 +40,8 @@ export function ContentEditor({ record, onSaved, onDirty }: {
   const [optionError, setOptionError] = useState("");
   const [editingOption, setEditingOption] = useState<string | null>(null);
   const optionInput = useRef<HTMLInputElement>(null);
+  const detailsTextarea = useRef<HTMLTextAreaElement | null>(null);
+  const contentImageInput = useRef<HTMLInputElement>(null);
   const optionsDialog = useRef<HTMLDialogElement>(null);
   const dragged = useRef<SortTarget | null>(null);
   const [dropTarget, setDropTarget] = useState<SortTarget | null>(null);
@@ -127,12 +129,20 @@ export function ContentEditor({ record, onSaved, onDirty }: {
   }
   async function attach(file: File | undefined, index: number, field: string) {
     if (!file) return;
+    const contentImage = record.tab === "Projects" && field === "details";
+    const text = String(rows[index].details || "");
+    const textarea = detailsTextarea.current?.isConnected && detailsTextarea.current.id === `Projects-${index}-details` ? detailsTextarea.current : null;
+    const position = textarea?.selectionEnd ?? text.length;
     setBusy(true); setError("");
     try {
       const url = await uploadImage(file);
-      if (record.tab === "Projects" && field === "details") {
-        setRows((current) => current.map((row, position) => position === index ? { ...row, details: String(row.details || "").trimEnd() + "\n\n![Project image](" + url + ")" } : row));
-        markDirty();
+      if (contentImage) {
+        const insertion = insertContentImage(text, url, position);
+        updateCell(index, "details", insertion.value);
+        requestAnimationFrame(() => {
+          textarea?.focus();
+          textarea?.setSelectionRange(insertion.cursor, insertion.cursor);
+        });
       } else updateCell(index, field, url);
     }
     catch (error) { setError(error instanceof Error ? error.message : "Unable to upload."); }
@@ -143,27 +153,33 @@ export function ContentEditor({ record, onSaved, onDirty }: {
     const settingKey = name === "value" ? String(row.key) : name;
     const kind = fieldKind(settingKey);
     const id = record.tab + "-" + index + "-" + name;
-    const image = ["image_url", "photo_url", "hero_image_url"].includes(settingKey);
+    const image = ["image_url", "preview_image_url", "photo_url", "hero_image_url"].includes(settingKey);
+    const previewImage = record.tab === "Projects" && name === "preview_image_url";
     const projectDetails = record.tab === "Projects" && name === "details";
     return (
       <div className={"admin-field " + (kind === "checkbox" ? "admin-checkbox" : "")} key={id} data-color-mode="light">
         <label htmlFor={id}>{label}</label>
-        {projectDetails ? <MDEditor value={String(row[name] ?? "")} onChange={(value) => updateCell(index, name, value || "")} preview="edit" height={340} visibleDragbar={false} previewOptions={{ rehypePlugins: [rehypeSanitize] }} textareaProps={{ id, disabled: busy, maxLength: 30000 }} /> : name === managedField ? <select id={id} value={String(row[name] ?? "").trim()} disabled={busy} onChange={(event) => updateCell(index, name, event.target.value)}><option value="">Select a {managedField}</option>{options.map((option) => <option key={option} value={option}>{option}</option>)}</select> : kind === "checkbox" ? <input id={id} type="checkbox" checked={visible(row[name])} onChange={(event) => updateCell(index, name, event.target.checked)} /> :
+        {projectDetails ? <MDEditor value={String(row[name] ?? "")} onChange={(value) => updateCell(index, name, value || "")} preview="live" height={340} visibleDragbar={false} previewOptions={{ rehypePlugins: [rehypeSanitize], urlTransform: markdownUrl }} textareaProps={{ id, disabled: busy, maxLength: 30000, onFocus: (event) => { detailsTextarea.current = event.currentTarget; }, onSelect: (event) => { detailsTextarea.current = event.currentTarget; } }} commandsFilter={(command) => command.name === "image" ? {
+          ...command,
+          buttonProps: { ...command.buttonProps, "aria-label": "Upload and insert image", title: "Upload and insert image", disabled: busy },
+          execute: () => { if (!busy) contentImageInput.current?.click(); },
+        } : command} /> : name === managedField ? <select id={id} value={String(row[name] ?? "").trim()} disabled={busy} onChange={(event) => updateCell(index, name, event.target.value)}><option value="">Select a {managedField}</option>{options.map((option) => <option key={option} value={option}>{option}</option>)}</select> : kind === "checkbox" ? <input id={id} type="checkbox" checked={visible(row[name])} onChange={(event) => updateCell(index, name, event.target.checked)} /> :
           kind === "textarea" || (name === "value" && ["introduction", "research_intro", "publications_intro"].includes(settingKey)) ? (
             <textarea id={id} value={String(row[name] ?? "")} rows={4} onChange={(event) => updateCell(index, name, event.target.value)} maxLength={30000} aria-describedby={name === "short_bio" ? id + "-hint" : undefined} placeholder={name === "short_bio" ? "Introduce this member and describe their research or role in the lab." : undefined} />
-          ) : <input id={id} type={kind === "url" ? "text" : kind} inputMode={kind === "url" ? "url" : undefined} value={kind === "date" ? dateValue(row[name]) : String(row[name] ?? "")} onChange={(event) => updateCell(index, name, event.target.value)} />}
+          ) : <input id={id} type={kind === "url" ? "text" : kind} inputMode={kind === "url" ? "url" : undefined} value={kind === "date" ? dateValue(row[name]) : String(row[name] ?? "")} onChange={(event) => updateCell(index, name, event.target.value)} aria-describedby={previewImage ? id + "-hint" : undefined} />}
+        {previewImage ? <p id={id + "-hint"}>Optional. Used in the Projects list. If empty, the cover or first image in Details is used. With no images, the list shows Preview coming soon.</p> : null}
         {name === "short_bio" ? <p id={id + "-hint"}>Optional. Shown in the Members list. Put each paragraph on a new line; use **text** for bold and [text](url) for links.</p> : null}
         {projectDetails ? <div className="admin-image-field">
-          <p>Use Markdown for headings, lists, links, and images. Upload an image to insert it at the end of the description.</p>
+          <p>Place the cursor in Details, then use the image toolbar button or upload below to insert an image there. The preview shows the uploaded image. Save changes to keep it in the project.</p>
           <label htmlFor={id + "-file"} className="admin-upload-label">Insert content image <span>(JPEG, PNG, WebP or GIF · up to 3 MB)</span></label>
-          <input id={id + "-file"} type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={busy} onChange={(event) => { void attach(event.target.files?.[0], index, name); event.target.value = ""; }} />
+          <input ref={contentImageInput} id={id + "-file"} type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={busy} onChange={(event) => { void attach(event.target.files?.[0], index, name); event.target.value = ""; }} />
         </div> : null}
         {record.tab === "Projects" && name === "video_url" ? <p>Paste a YouTube link or a direct MP4, WebM, or Ogg file URL. The player appears below the description.</p> : null}
         {record.tab === "Projects" && name === "video_captions_url" ? <p>Optional WebVTT (.vtt) captions for direct video files with spoken content.</p> : null}
         {image ? (
           <div className="admin-image-field">
             {row[name] && contentUrl(String(row[name])) ? <FallbackImage key={String(row[name])} src={String(row[name])} alt="Selected image preview" className="admin-image-preview" /> : null}
-            <label htmlFor={id + "-file"} className="admin-upload-label">Upload image <span>(JPEG, PNG, WebP or GIF · up to 3 MB)</span></label>
+            <label htmlFor={id + "-file"} className="admin-upload-label">{previewImage ? "Upload preview image" : "Upload image"} <span>(JPEG, PNG, WebP or GIF · up to 3 MB)</span></label>
             <input id={id + "-file"} type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={busy} onChange={(event) => { void attach(event.target.files?.[0], index, name); event.target.value = ""; }} />
           </div>
         ) : null}

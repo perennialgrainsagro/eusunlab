@@ -1,7 +1,7 @@
 import { createElement, type ReactNode } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { contentUrl } from "./content-schema.ts";
+import { contentUrl, markdownUrl } from "./content-schema.ts";
 import { plainText } from "./format-text.ts";
 
 export type BlogInput = { title: string; writer_name: string; slug: string; excerpt: string; main_image_url: string; main_image_alt: string; body: string; published: boolean };
@@ -34,7 +34,7 @@ export function renderBlogDocument(markdown: string): ReactNode {
   return createElement(Markdown, {
     skipHtml: true,
     remarkPlugins: [remarkGfm],
-    urlTransform: (url: string, key: string) => key === "href" && (/^\/(?![/\\])/.test(url) || url.startsWith("#")) ? url : contentUrl(url, key === "href"),
+    urlTransform: markdownUrl,
   }, markdown);
 }
 
