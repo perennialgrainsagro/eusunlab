@@ -137,6 +137,26 @@ export async function HomePage() {
             ) : <EmptyState>No news has been added yet.</EmptyState>}
           </div>
         </section>
+        {settings.join_us_heading ? (
+          <section className="home-join" aria-labelledby="home-join-title">
+            <div className="home-join-copy">
+              <h1 id="home-join-title">{formatText(settings.join_us_heading)}</h1>
+              {settings.join_us_intro ? <p className="home-join-intro">{formatText(settings.join_us_intro)}</p> : null}
+              <Multiline text={settings.join_us_description} />
+              {settings.join_us_email ? (
+                <ExternalLink href={`mailto:${settings.join_us_email}`} className="home-join-contact">
+                  {formatText(settings.join_us_contact_label, false)} {settings.join_us_email}
+                </ExternalLink>
+              ) : null}
+            </div>
+            {settings.join_us_course_title || settings.join_us_course_description ? (
+              <div className="home-join-course">
+                {settings.join_us_course_title ? <h3>{formatText(settings.join_us_course_title)}</h3> : null}
+                <Multiline text={settings.join_us_course_description} />
+              </div>
+            ) : null}
+          </section>
+        ) : null}
       </div>
     </SiteFrame>
   );

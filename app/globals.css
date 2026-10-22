@@ -129,6 +129,27 @@ h3 { margin-bottom: .45rem; font-size: 1.08rem; }
 .home-content { min-width: 0; }
 .home-content .hero { height: 100%; gap: 2rem; }
 .home-layout > .home-card-section, .home-layout > .news-section { grid-column: 1 / -1; }
+.home-join {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: clamp(2rem, 5dvh, 3.5rem);
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--nav-background);
+  border-radius: 6px;
+  background: #f2f5f7;
+  overflow-wrap: anywhere;
+}
+.home-join-copy { min-width: 0; }
+.home-join h1 { color: var(--nav-background); }
+.home-join-intro { margin: 0 0 .75rem; font-size: 1.15rem; font-weight: 600; white-space: pre-line; }
+.home-join-contact { display: inline-block; margin-top: 1rem; padding: .65rem 1rem; border-radius: 4px; background: var(--nav-background); color: white; font-size: .9rem; text-decoration: none; }
+.home-join-contact:hover { background: var(--accent); }
+.home-join-contact:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.home-join-course { min-width: 0; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+.home-join-course h3 { color: var(--accent); }
+.home-join-course .multiline { font-size: .94rem; }
 .home-blog { min-width: 0; padding: clamp(1rem, 5dvh, 5rem) 0; }
 .home-blog > h2 { margin-bottom: 1.25rem; font-size: 1.15rem; }
 .home-blog-list { border-top: 1px solid var(--line); }

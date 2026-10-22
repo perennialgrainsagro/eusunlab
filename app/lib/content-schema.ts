@@ -2,6 +2,23 @@ import type { SheetRow } from "./types.ts";
 
 export const DEFAULT_STUDENT_PHOTO_URL = "https://pure.au.dk/portal/assets/no-portrait-473c6d005990baa1f418d9c668dcd4ec.png";
 
+export const joinUsDefaults = {
+  join_us_heading: "Join us",
+  join_us_intro: "Come join us next summer! Hosting students to help with activities on a range of topics!",
+  join_us_description: "Site visits, long-term research stays and questions are all welcome.",
+  join_us_contact_label: "Say hello at",
+  join_us_email: "eusun.han@agro.au.dk",
+  join_us_course_title: "Root Methods PhD course (Coming 2028)",
+  join_us_course_description: "A PhD course on root research methods, taught by the lab and colleagues.",
+};
+
+export function addJoinUsSettings(rows: SheetRow[]): SheetRow[] {
+  const keys = new Set(rows.map((row) => row.key));
+  return [...rows, ...Object.entries(joinUsDefaults)
+    .filter(([key]) => !keys.has(key))
+    .map(([key, value]) => ({ key, value }))];
+}
+
 export const contentTabs = {
   Settings: { label: "Site settings", fields: ["key", "value"] },
   News: { label: "News", fields: ["month", "content", "link_label", "link_url", "visible", "display_order"] },
@@ -74,8 +91,8 @@ export function fieldKind(name: string) {
   if (["display_order", "order", "year"].includes(name)) return "number";
   if (name === "month") return "date";
   if (name.endsWith("_url")) return "url";
-  if (name === "email") return "email";
-  if (["value", "content", "summary", "details", "bio", "short_bio", "subtext", "research_topics", "authors"].includes(name)) return "textarea";
+  if (name === "email" || name.endsWith("_email")) return "email";
+  if (["value", "content", "summary", "details", "bio", "short_bio", "subtext", "research_topics", "authors", "join_us_intro", "join_us_description", "join_us_course_description"].includes(name)) return "textarea";
   return "text";
 }
 
@@ -153,6 +170,9 @@ export function validateRows(tab: ContentTab, value: unknown): SheetRow[] {
     }
     if (tab === "Settings" && row.key === "hero_image_url" && row.value && !contentUrl(String(row.value))) {
       throw new Error("Use a valid image URL for Hero image URL.");
+    }
+    if (tab === "Settings" && row.key === "join_us_email" && row.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(row.value).trim())) {
+      throw new Error("Use a valid email address for Join us.");
     }
     return row;
   });

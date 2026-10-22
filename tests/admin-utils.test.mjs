@@ -3,8 +3,8 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createSession, hashPassword, validSession, verifyCredentials } from "../app/lib/admin-auth.ts";
 import { imageType, makeSlug, renderBlogDocument, validatePost } from "../app/lib/blog.ts";
-import { contentOptions, DEFAULT_STUDENT_PHOTO_URL, renameContentOption, reorderList, reorderRows, validateOptions, validateRows } from "../app/lib/content-schema.ts";
-import { normalizeNews, normalizeProfessorPublications, normalizeResearch, normalizePublications, normalizeStudents } from "../app/lib/content.ts";
+import { addJoinUsSettings, contentOptions, DEFAULT_STUDENT_PHOTO_URL, fieldKind, joinUsDefaults, renameContentOption, reorderList, reorderRows, validateOptions, validateRows } from "../app/lib/content-schema.ts";
+import { normalizeNews, normalizeProfessorPublications, normalizeResearch, normalizePublications, normalizeSettings, normalizeStudents } from "../app/lib/content.ts";
 
 test("single admin credentials and signed sessions reject tampering, expiry, and password rotation", () => {
   const previous = { username: process.env.ADMIN_USERNAME, hash: process.env.ADMIN_PASSWORD_HASH, secret: process.env.ADMIN_SESSION_SECRET };
@@ -60,6 +60,37 @@ test("content validation keeps hidden rows and rejects malformed content and uns
   assert.throws(() => validateRows("Research", [{ display_order: "not a number" }]));
   assert.equal(imageType(Buffer.from("<svg onload='alert(1)'>")), null);
   assert.equal(imageType(Buffer.from("89504e470d0a1a0a", "hex")), "image/png");
+});
+
+test("Join us settings supply missing fields and preserve saved edits and intentional blanks", () => {
+  const rows = [
+    { key: "lab_name", value: "Our lab" },
+    { key: "join_us_heading", value: "" },
+    { key: "join_us_description", value: "Visit our **lab**.\nResearch stays are welcome." },
+    { key: "custom_setting", value: "Keep this" },
+  ];
+  const defaults = addJoinUsSettings(rows);
+  assert.equal(rows.length, 4);
+  assert.deepEqual(defaults.slice(0, rows.length), rows);
+  assert.equal(defaults.length, rows.length + Object.keys(joinUsDefaults).length - 2);
+  assert.deepEqual(addJoinUsSettings(defaults), defaults);
+  const saved = validateRows("Settings", defaults);
+  const settings = normalizeSettings(saved);
+  assert.equal(settings.lab_name, "Our lab");
+  assert.equal(settings.join_us_heading, "");
+  assert.equal(settings.join_us_description, rows[2].value);
+  assert.equal(settings.join_us_intro, joinUsDefaults.join_us_intro);
+  assert.equal(settings.join_us_course_title, joinUsDefaults.join_us_course_title);
+  assert.equal(settings.join_us_email, "eusun.han@agro.au.dk");
+  assert.equal(fieldKind("join_us_email"), "email");
+  assert.equal(fieldKind("join_us_description"), "textarea");
+  for (const email of ["hello@lab.example", ""]) {
+    assert.equal(normalizeSettings(validateRows("Settings", [{ key: "join_us_email", value: email }])).join_us_email, email);
+  }
+  for (const email of ["invalid", "eusun.han@agro.au.dk\r\nBcc:other@example.com"]) {
+    assert.throws(() => validateRows("Settings", [{ key: "join_us_email", value: email }]));
+    assert.equal(normalizeSettings([{ key: "join_us_email", value: email }]).join_us_email, "");
+  }
 });
 
 test("students without photos save and display the default portrait while custom photos stay unchanged", () => {

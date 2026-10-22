@@ -36,20 +36,7 @@ type GvizPayload = {
   };
 };
 
-const settingsKeys = new Set<keyof Settings>([
-  "lab_name",
-  "tagline",
-  "introduction",
-  "hero_image_url",
-  "hero_image_alt",
-  "affiliation",
-  "contact_email",
-  "address",
-  "footer_text",
-  "research_heading",
-  "research_intro",
-  "publications_intro",
-]);
+const settingsKeys = new Set(Object.keys(sampleSettings));
 
 function headerName(value: string) {
   return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
@@ -148,6 +135,7 @@ export function normalizeSettings(rows: SheetRow[]): Settings {
   }
   settings.hero_image_url = safeUrl(settings.hero_image_url, false);
   settings.contact_email = safeEmail(settings.contact_email);
+  settings.join_us_email = safeEmail(settings.join_us_email);
   return settings;
 }
 

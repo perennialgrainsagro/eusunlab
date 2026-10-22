@@ -18,6 +18,13 @@ export type Settings = {
   research_heading: string;
   research_intro: string;
   publications_intro: string;
+  join_us_heading: string;
+  join_us_intro: string;
+  join_us_description: string;
+  join_us_contact_label: string;
+  join_us_email: string;
+  join_us_course_title: string;
+  join_us_course_description: string;
 };
 
 export type NewsItem = {

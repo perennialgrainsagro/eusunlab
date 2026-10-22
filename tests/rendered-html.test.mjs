@@ -214,6 +214,21 @@ test("Home shows the recent blog section and a More link when there are no publi
   assert.doesNotMatch(html, /class="home-blog-item"/);
 });
 
+test("Home ends with the Join us invitation, email button, and upcoming PhD course", async () => {
+  const html = await (await fetch(baseUrl + "/")).text();
+  const box = html.match(/<section class="home-join" aria-labelledby="home-join-title">([\s\S]*?)<\/section>/);
+  assert.ok(box);
+  assert.match(box[1], /<h1 id="home-join-title">Join us<\/h1>/);
+  assert.match(box[1], /Come join us next summer! Hosting students to help with activities on a range of topics!/);
+  assert.match(box[1], /Site visits, long-term research stays and questions are all welcome\./);
+  assert.match(box[1], /href="mailto:eusun.han@agro.au.dk" class="home-join-contact"/);
+  assert.match(box[1], /Say hello at.*eusun.han@agro.au.dk/);
+  assert.match(box[1], /Root Methods PhD course \(Coming 2028\)/);
+  assert.match(box[1], /A PhD course on root research methods, taught by the lab and colleagues\./);
+  assert.ok(box.index > html.indexOf('class="section news-section"'));
+  assert.match(html.slice(box.index + box[0].length), /^<\/div><\/main><footer/);
+});
+
 test("professor publications render as a numbered citation list with inline bold and links", async () => {
   const [professorHtml, labHtml] = await Promise.all(
     ["/members/professor", "/publications"].map(async (pathname) => (await fetch(baseUrl + pathname)).text()),

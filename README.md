@@ -130,6 +130,12 @@ In `Settings`, `hero_image_url` controls the image to the right of the Home
 introduction and `hero_image_alt` supplies its accessible description. Leave
 `hero_image_url` blank to hide it. The Home title, tagline, affiliation, and
 introduction also come from `Settings`.
+Home ends with a **Join us** box below News. Edit its heading, recruitment text,
+description, contact label and email, and course title and description under
+**Site settings → Home · Join us** in `/admin`, then **Save changes**.
+These use the `join_us_*` Settings keys. Existing content automatically receives
+the reference text as defaults; saved edits and intentionally blank fields are kept.
+Clear **Heading** to hide the box or **Email** to hide its contact button.
 News uses `display_order` when provided; otherwise it displays newest dates first.
 
 Wrap words in `**double asterisks**` to display them in bold, for example

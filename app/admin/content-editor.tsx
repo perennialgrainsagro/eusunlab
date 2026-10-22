@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import rehypeSanitize from "rehype-sanitize";
 import { useRef, useState, type FormEvent, type PointerEvent } from "react";
-import { choiceField, contentOptions, contentTabs, contentUrl, DEFAULT_STUDENT_PHOTO_URL, fieldKind, fieldLabel, markdownUrl, renameContentOption, reorderList, reorderRows, validateOptions, type ContentRecord } from "../lib/content-schema.ts";
+import { addJoinUsSettings, choiceField, contentOptions, contentTabs, contentUrl, DEFAULT_STUDENT_PHOTO_URL, fieldKind, fieldLabel, markdownUrl, renameContentOption, reorderList, reorderRows, validateOptions, type ContentRecord } from "../lib/content-schema.ts";
 import type { SheetRow } from "../lib/types.ts";
 import { FallbackImage } from "../fallback-image";
 import { insertContentImage, uploadImage } from "./upload";
@@ -28,7 +28,7 @@ type SortTarget = { kind: "item" | "option"; index: number };
 export function ContentEditor({ record, onSaved, onDirty }: {
   record: ContentRecord; onSaved: (record: ContentRecord) => void; onDirty: (dirty: boolean) => void;
 }) {
-  const [rows, setRows] = useState(record.rows);
+  const [rows, setRows] = useState(() => record.tab === "Settings" ? addJoinUsSettings(record.rows) : record.rows);
   const [selected, setSelected] = useState(0);
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -194,7 +194,12 @@ export function ContentEditor({ record, onSaved, onDirty }: {
       {record.tab === "Projects" ? <p>Introduce each project with a summary, a Markdown description with images, and an optional video. Replace the example content with your actual projects.</p> : null}
       {error ? <p className="admin-error" role="alert">{error}</p> : null}
       {notice ? <p className="admin-notice" role="status">{notice}</p> : null}
-      {record.tab === "Settings" ? <div className="admin-settings-grid">{rows.map((row, index) => field(index, "value", fieldLabel(String(row.key))))}</div> : (
+      {record.tab === "Settings" ? <>
+        <div className="admin-settings-grid">{rows.map((row, index) => !String(row.key).startsWith("join_us_") ? field(index, "value", fieldLabel(String(row.key))) : null)}</div>
+        <h2 className="admin-settings-heading">Home · Join us</h2>
+        <p>Shown below News on Home. Clear Heading to hide this box. Save changes to apply your edits.</p>
+        <div className="admin-settings-grid">{rows.map((row, index) => String(row.key).startsWith("join_us_") ? field(index, "value", fieldLabel(String(row.key).slice("join_us_".length))) : null)}</div>
+      </> : (
         <div className="admin-content-layout">
           <aside className="admin-item-list" aria-label="Items">
             {sortable ? <button className="admin-secondary" type="button" onClick={addRow} disabled={busy}>+ Add item</button> : null}
