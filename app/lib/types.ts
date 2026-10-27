@@ -1,3 +1,5 @@
+import type { methodsDefaults } from "./content-schema.ts";
+
 export type SheetRow = Record<string, unknown>;
 
 export type DataResult<T> = {
@@ -25,7 +27,7 @@ export type Settings = {
   join_us_email: string;
   join_us_course_title: string;
   join_us_course_description: string;
-};
+} & Record<keyof typeof methodsDefaults, string>;
 
 export type NewsItem = {
   month: string;

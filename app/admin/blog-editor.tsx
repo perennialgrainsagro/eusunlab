@@ -2,12 +2,12 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import rehypeSanitize from "rehype-sanitize";
 import { makeSlug, type BlogInput, type BlogPost } from "../lib/blog.ts";
-import { contentUrl } from "../lib/content-schema.ts";
+import { contentUrl, markdownUrl } from "../lib/content-schema.ts";
 import { FallbackImage } from "../fallback-image";
-import { uploadImage } from "./upload";
+import { blogImage, insertContentImage, uploadImage } from "./upload";
 import { plainText } from "../lib/format-text.ts";
 
 const MDEditor = dynamic(() => import("@uiw/react-md-editor/nohighlight"), { ssr: false, loading: () => <p>Loading editor…</p> });
@@ -22,6 +22,8 @@ export function BlogEditor({ posts, onPosts, onDirty }: {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const bodyTextarea = useRef<HTMLTextAreaElement | null>(null);
+  const contentImageInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (!notice) return;
     const timer = setTimeout(() => setNotice(""), 6000);
@@ -88,6 +90,23 @@ export function BlogEditor({ posts, onPosts, onDirty }: {
     } catch (error) { setError(error instanceof Error ? error.message : "Unable to upload image."); }
     finally { setBusy(false); }
   }
+  // Same flow as Projects → Details: upload, then insert the image Markdown at the cursor.
+  async function insertImage(file: File | undefined) {
+    if (!file) return;
+    const textarea = bodyTextarea.current?.isConnected ? bodyTextarea.current : null;
+    const position = textarea?.selectionEnd ?? draft.body.length;
+    setBusy(true); setError("");
+    try {
+      const url = await uploadImage(file);
+      const insertion = insertContentImage(draft.body, url, position, blogImage);
+      update("body", insertion.value);
+      requestAnimationFrame(() => {
+        textarea?.focus();
+        textarea?.setSelectionRange(insertion.cursor, insertion.cursor);
+      });
+    } catch (error) { setError(error instanceof Error ? error.message : "Unable to upload image."); }
+    finally { setBusy(false); }
+  }
   return (
     <div>
       <div className="admin-section-heading"><div><h1>Blog</h1><p>Write an article, add images, and publish when ready.</p></div><button className="admin-secondary" type="button" onClick={startNew} disabled={busy}>+ New post</button></div>
@@ -110,7 +129,16 @@ export function BlogEditor({ posts, onPosts, onDirty }: {
           <div className="admin-field"><label htmlFor="post-image-url">Add main image (Optional)</label><input id="post-image-url" inputMode="url" placeholder="https://example.com/image.jpg" value={draft.main_image_url} onChange={(event) => update("main_image_url", event.target.value)} maxLength={2048} disabled={busy} /><label className="admin-upload-label" htmlFor="post-image">Or upload a file (Optional) <span>(JPEG, PNG, WebP or GIF · up to 3 MB)</span></label><input id="post-image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={busy} onChange={(event) => { void attach(event.target.files?.[0]); event.target.value = ""; }} />{contentUrl(draft.main_image_url) ? <FallbackImage key={draft.main_image_url} src={draft.main_image_url} alt={draft.main_image_alt || "Main image preview"} className="admin-image-preview" /> : null}</div>
           <div className="admin-field" data-color-mode="light">
             <span className="admin-field-label" id="article-content-label">Article</span>
-            <MDEditor value={draft.body} onChange={(value) => update("body", value || "")} preview="edit" height={340} visibleDragbar={false} previewOptions={{ rehypePlugins: [rehypeSanitize] }} textareaProps={{ "aria-labelledby": "article-content-label", disabled: busy }} />
+            <MDEditor value={draft.body} onChange={(value) => update("body", value || "")} preview="edit" height={340} visibleDragbar={false} previewOptions={{ rehypePlugins: [rehypeSanitize], urlTransform: markdownUrl }} textareaProps={{ "aria-labelledby": "article-content-label", disabled: busy, onFocus: (event) => { bodyTextarea.current = event.currentTarget; }, onSelect: (event) => { bodyTextarea.current = event.currentTarget; } }} commandsFilter={(command) => command.name === "image" ? {
+              ...command,
+              buttonProps: { ...command.buttonProps, "aria-label": "Upload and insert image", title: "Upload and insert image", disabled: busy },
+              execute: () => { if (!busy) contentImageInput.current?.click(); },
+            } : command} />
+            <div className="admin-image-field">
+              <p>Place the cursor in Article, then use the image toolbar button or upload below to insert an image there. Use the editor&apos;s preview button to see it. Save the post to keep it.</p>
+              <label htmlFor="post-content-image" className="admin-upload-label">Insert content image <span>(JPEG, PNG, WebP or GIF · up to 3 MB)</span></label>
+              <input ref={contentImageInput} id="post-content-image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={busy} onChange={(event) => { void insertImage(event.target.files?.[0]); event.target.value = ""; }} />
+            </div>
           </div>
           <div className="admin-field admin-checkbox"><label htmlFor="post-published">Publish on website</label><input id="post-published" type="checkbox" checked={draft.published} onChange={(event) => update("published", event.target.checked)} disabled={busy} /></div>
           <div className="admin-post-actions"><button className="admin-primary" type="submit" disabled={busy || !dirty}>{busy ? "Please wait…" : draft.published ? "Save and publish" : "Save draft"}</button>{draft.id ? <Link href={"/admin/preview/" + draft.id} prefetch={false} target="_blank" rel="noreferrer">Preview saved post ↗</Link> : null}{draft.id && draft.published ? <Link href={"/blog/" + encodeURIComponent(draft.slug)} target="_blank" rel="noreferrer">View article ↗</Link> : null}<span>{dirty ? draft.id ? "Unsaved changes · Save to update preview" : "Unsaved changes" : ""}</span></div>

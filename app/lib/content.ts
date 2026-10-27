@@ -133,7 +133,9 @@ export function normalizeSettings(rows: SheetRow[]): Settings {
     const key = asText(row.key) as keyof Settings;
     if (settingsKeys.has(key)) settings[key] = asText(row.value);
   }
-  settings.hero_image_url = safeUrl(settings.hero_image_url, false);
+  for (const key of settingsKeys) {
+    if (key.endsWith("_url")) settings[key as keyof Settings] = safeUrl(settings[key as keyof Settings], false);
+  }
   settings.contact_email = safeEmail(settings.contact_email);
   settings.join_us_email = safeEmail(settings.join_us_email);
   return settings;

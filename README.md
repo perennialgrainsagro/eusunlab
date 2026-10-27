@@ -26,6 +26,10 @@ on the longest side, keeping proportions, WebP quality 82, and no enlargement.
 Transparency and GIF/WebP animation are preserved. Already small images stay
 in their original format if conversion would increase their size. Invalid
 images or inputs exceeding 40 million total pixels are rejected.
+The dashboard's **Server** page shows database storage against the Neon Free plan
+limit (1 GB) and lists uploaded images that no content section or blog post
+(including drafts) uses and that are older than a day; they can be removed there.
+Removal re-checks usage at delete time and cannot be undone.
 Only new file uploads are optimized; external image URLs are not copied into
 the database, and previously stored images keep their existing URLs and bytes.
 Image frames display the full image with its proportions preserved, centered
@@ -136,6 +140,10 @@ description, contact label and email, and course title and description under
 These use the `join_us_*` Settings keys. Existing content automatically receives
 the reference text as defaults; saved edits and intentionally blank fields are kept.
 Clear **Heading** to hide the box or **Email** to hide its contact button.
+The **Methods & tools** section of `/newpage` uses the `methods_*` Settings keys,
+edited under **Site settings → New page · Methods & tools**: heading, manual link,
+segmentation text, two method blocks, facilities, the toolkit image, and three photos.
+They default to the reference content the same way; clear a field to hide that part.
 News uses `display_order` when provided; otherwise it displays newest dates first.
 
 Wrap words in `**double asterisks**` to display them in bold, for example

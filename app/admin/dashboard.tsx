@@ -6,12 +6,13 @@ import { contentTabs, type ContentRecord, type ContentTab } from "../lib/content
 import type { BlogPost } from "../lib/blog.ts";
 import { ContentEditor } from "./content-editor";
 import { BlogEditor } from "./blog-editor";
+import { ServerPanel } from "./server-panel";
 
 export function AdminDashboard({ initialContent, initialPosts }: { initialContent: ContentRecord[]; initialPosts: BlogPost[] }) {
   const router = useRouter();
   const [content, setContent] = useState(initialContent);
   const [posts, setPosts] = useState(initialPosts);
-  const [tab, setTab] = useState<ContentTab | "Blog">("Settings");
+  const [tab, setTab] = useState<ContentTab | "Blog" | "Server">("Settings");
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -20,7 +21,7 @@ export function AdminDashboard({ initialContent, initialPosts }: { initialConten
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty]);
-  function switchTab(next: ContentTab | "Blog") {
+  function switchTab(next: ContentTab | "Blog" | "Server") {
     if (next === tab || (dirty && !window.confirm("Discard unsaved changes?"))) return;
     setDirty(false);
     setTab(next);
@@ -46,11 +47,12 @@ export function AdminDashboard({ initialContent, initialPosts }: { initialConten
         <nav className="admin-sidebar" aria-label="Content sections">
           {(Object.keys(contentTabs) as ContentTab[]).map((name) => <button className={tab === name ? "active" : ""} aria-current={tab === name ? "page" : undefined} key={name} type="button" onClick={() => switchTab(name)}>{contentTabs[name].label}</button>)}
           <button className={tab === "Blog" ? "active" : ""} aria-current={tab === "Blog" ? "page" : undefined} type="button" onClick={() => switchTab("Blog")}>Blog</button>
+          <button className={"admin-server-tab " + (tab === "Server" ? "active" : "")} aria-current={tab === "Server" ? "page" : undefined} type="button" onClick={() => switchTab("Server")}>Server</button>
         </nav>
         <main className="admin-main">
           <p className="admin-formatting-hint">Text fields support <code>**text**</code> for bold and <code>[text](https://example.com)</code> for links. Formatting appears on the website after saving. Enter URLs, email addresses, and dates in their usual format.</p>
           {error ? <p className="admin-error" role="alert">{error}</p> : null}
-          {tab === "Blog" ? <BlogEditor posts={posts} onPosts={setPosts} onDirty={setDirty} /> : record ? (
+          {tab === "Server" ? <ServerPanel /> : tab === "Blog" ? <BlogEditor posts={posts} onPosts={setPosts} onDirty={setDirty} /> : record ? (
             <ContentEditor key={record.tab} record={record} onDirty={setDirty} onSaved={(saved) => {
               setContent((records) => records.map((record) => record.tab === saved.tab ? saved : record));
             }} />

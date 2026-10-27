@@ -21,6 +21,9 @@ test("image uploads reduce storage while preserving proportions, transparency, o
   const tiny = Buffer.from("R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==", "base64");
   assert.deepEqual(await optimizeImage(tiny), { bytes: tiny, contentType: "image/gif" }, "Small images are not enlarged or replaced by larger files.");
 
+  const located = await sharp({ create: { width: 8, height: 8, channels: 3, background: "white" } }).jpeg().withExif({ IFD3: { GPSLatitudeRef: "N", GPSLatitude: "56/1 9/1 0/1" } }).toBuffer();
+  assert.equal((await sharp((await optimizeImage(located)).bytes).metadata()).exif, undefined, "Location metadata is never stored, even for small originals.");
+
   const animation = await sharp([
     { create: { width: 2000, height: 1000, channels: 4, background: "red" } },
     { create: { width: 2000, height: 1000, channels: 4, background: "blue" } },

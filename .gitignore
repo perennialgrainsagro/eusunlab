@@ -39,3 +39,6 @@ yarn-error.log*
 ~$*.xlsx
 /outputs
 /scripts/
+
+# nested repo: lexapeters-boop/eusun-lab-website
+/eusun-lab-website/

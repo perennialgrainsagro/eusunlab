@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { insertContentImage } from "../app/admin/upload.ts";
+import { blogImage, insertContentImage } from "../app/admin/upload.ts";
 import { renderBlogDocument } from "../app/lib/blog.ts";
 import { projectPreview } from "../app/lib/projects.ts";
 
@@ -21,4 +21,13 @@ test("uploaded content images appear at the cursor without deleting surrounding 
   }
   assert.match(insertContentImage("", url, 0).value, /!\[Project image\]/);
   assert.throws(() => insertContentImage("x".repeat(30000), url, 100), /30,000 characters/);
+});
+
+test("blog article images use the article's alt text and length limit", () => {
+  const url = "/media/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
+  const insertion = insertContentImage("Intro\n\nOutro", url, 5, blogImage);
+  assert.equal(insertion.value, `Intro\n\n![Blog image](${url})\n\n\n\nOutro`);
+  assert.ok(renderToStaticMarkup(renderBlogDocument(insertion.value)).includes(`src="${url}"`));
+  assert.ok(insertContentImage("x".repeat(30000), url, 100, blogImage).value.length > 30000, "Articles allow more than the project limit.");
+  assert.throws(() => insertContentImage("x".repeat(300000), url, 100, blogImage), /300,000 characters/);
 });

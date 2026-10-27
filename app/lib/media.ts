@@ -15,7 +15,7 @@ export async function optimizeImage(bytes: Buffer) {
   } catch {
     throw new Error("Unable to process this image. Choose a valid image with no more than 40 million total pixels.");
   }
-  if (optimized.length >= bytes.length && (metadata.width || 0) <= 1600 && (metadata.pageHeight || metadata.height || 0) <= 1600 && (!metadata.orientation || metadata.orientation === 1)) {
+  if (optimized.length >= bytes.length && (metadata.width || 0) <= 1600 && (metadata.pageHeight || metadata.height || 0) <= 1600 && (!metadata.orientation || metadata.orientation === 1) && !metadata.exif && !metadata.xmp) {
     return { bytes, contentType };
   }
   if (optimized.length > 3 * 1024 * 1024) throw new Error("The optimized image must be 3 MB or smaller.");

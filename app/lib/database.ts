@@ -96,6 +96,26 @@ export async function readImage(id: string) {
   return record as { content_type: string; data: string } | undefined;
 }
 
+// An image is unused when no content or blog post mentions its id. The one-day grace keeps
+// uploads that an open editor has not saved yet.
+const unusedMedia = "m.created_at < now() - interval '1 day' AND NOT EXISTS (SELECT 1 FROM site_content c WHERE c.rows::text ILIKE '%' || m.id::text || '%') AND NOT EXISTS (SELECT 1 FROM blog_posts p WHERE p.body ILIKE '%' || m.id::text || '%' OR p.main_image_url ILIKE '%' || m.id::text || '%')";
+
+export async function serverUsage() {
+  const sql = database();
+  const [[size], tables, [media], unused] = await Promise.all([
+    sql.query("SELECT pg_database_size(current_database())::float8 AS bytes"),
+    sql.query("SELECT relname AS name, pg_total_relation_size(relid)::float8 AS bytes FROM pg_statio_user_tables ORDER BY bytes DESC"),
+    sql.query("SELECT count(*)::int AS count, coalesce(sum(octet_length(data)), 0)::float8 AS bytes FROM media"),
+    sql.query("SELECT m.id::text, m.content_type, octet_length(m.data)::int AS bytes, m.created_at::text FROM media m WHERE " + unusedMedia + " ORDER BY m.created_at"),
+  ]);
+  return { database_bytes: size.bytes as number, tables: tables as { name: string; bytes: number }[], media: media as { count: number; bytes: number }, unused: unused as { id: string; content_type: string; bytes: number; created_at: string }[] };
+}
+
+export async function deleteUnusedMedia(ids: string[]) {
+  const rows = await database().query("DELETE FROM media m WHERE m.id::text = ANY($1) AND " + unusedMedia + " RETURNING m.id::text", [ids]);
+  return rows.map((row) => String(row.id));
+}
+
 export async function takeLoginAttempt(key: string) {
   const [record] = await database().query(
     "INSERT INTO admin_login_attempts (key, attempts) VALUES ($1, 1) ON CONFLICT (key) DO UPDATE SET attempts = CASE WHEN admin_login_attempts.started_at < now() - interval '15 minutes' THEN 1 ELSE admin_login_attempts.attempts + 1 END, started_at = CASE WHEN admin_login_attempts.started_at < now() - interval '15 minutes' THEN now() ELSE admin_login_attempts.started_at END RETURNING attempts",

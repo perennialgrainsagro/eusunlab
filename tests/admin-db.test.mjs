@@ -32,6 +32,7 @@ test("Neon admin login, content edits, image upload, and blog publishing work en
   let cookie = "";
   let post;
   let mediaId;
+  const extraMediaIds = [];
   let savedContent;
   let originalContent;
   const temporaryPostIds = [];
@@ -55,6 +56,8 @@ test("Neon admin login, content edits, image upload, and blog publishing work en
       ["/api/admin/posts/missing-post", "PUT"],
       ["/api/admin/posts/missing-post", "DELETE"],
       ["/api/admin/media", "POST"],
+      ["/api/admin/server", "GET"],
+      ["/api/admin/server", "DELETE"],
       ["/api/admin/logout", "POST"],
     ];
     for (const [path, method] of protectedRequests) {
@@ -166,6 +169,21 @@ test("Neon admin login, content edits, image upload, and blog publishing work en
     post = await created.json();
     assert.equal(post.main_image_url, imageUrl);
     assert.equal(post.main_image_alt, input.main_image_alt);
+    const sql = database();
+    await sql.query("UPDATE media SET created_at = now() - interval '2 days' WHERE id::text = $1", [mediaId]);
+    const [orphan] = await sql.query("INSERT INTO media (content_type, data, created_at) VALUES ('image/gif', decode($1, 'base64'), now() - interval '2 days') RETURNING id::text", [servedBytes.subarray(0, 16).toString("base64")]);
+    const [recent] = await sql.query("INSERT INTO media (content_type, data) VALUES ('image/gif', decode($1, 'base64')) RETURNING id::text", [servedBytes.subarray(0, 16).toString("base64")]);
+    extraMediaIds.push(orphan.id, recent.id);
+    const usage = await (await request("/api/admin/server")).json();
+    assert.ok(usage.database_bytes > 0 && usage.media.count >= 3);
+    const unusedIds = usage.unused.map((image) => image.id);
+    assert.ok(unusedIds.includes(orphan.id), "Old images nothing refers to are listed.");
+    assert.ok(!unusedIds.includes(mediaId), "Images used by a draft post are kept.");
+    assert.ok(!unusedIds.includes(recent.id), "Fresh uploads that may not be saved yet are kept.");
+    assert.equal((await request("/api/admin/server", "DELETE", { ids: [orphan.id] }, "https://attacker.example")).status, 403);
+    const cleanup = await request("/api/admin/server", "DELETE", { ids: [orphan.id, mediaId, recent.id] });
+    assert.deepEqual((await cleanup.json()).deleted, [orphan.id], "Only unused images are deleted, even when others are requested.");
+    assert.equal((await request(imageUrl)).status, 200);
     const duplicates = await Promise.all([0, 1].map(async () => {
       const response = await request("/api/admin/posts", "POST", input);
       assert.equal(response.status, 201, "Save duplicate URLs instead of returning a conflict.");
@@ -282,7 +300,7 @@ test("Neon admin login, content edits, image upload, and blog publishing work en
       assert.equal(result.length, 1, "Restore temporary test News without overwriting concurrent edits.");
     }
     if (post) await sql.query("DELETE FROM blog_posts WHERE id::text = $1", [post.id]);
-    if (mediaId) await sql.query("DELETE FROM media WHERE id::text = $1", [mediaId]);
+    for (const extraId of [mediaId, ...extraMediaIds].filter(Boolean)) await sql.query("DELETE FROM media WHERE id::text = $1", [extraId]);
     await sql.query("DELETE FROM admin_login_attempts WHERE key = $1", [attemptKey]);
     } finally {
     server.kill("SIGTERM");

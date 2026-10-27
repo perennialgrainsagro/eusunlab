@@ -3,7 +3,7 @@ import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createSession, hashPassword, validSession, verifyCredentials } from "../app/lib/admin-auth.ts";
 import { imageType, makeSlug, renderBlogDocument, validatePost } from "../app/lib/blog.ts";
-import { addJoinUsSettings, contentOptions, DEFAULT_STUDENT_PHOTO_URL, fieldKind, joinUsDefaults, renameContentOption, reorderList, reorderRows, validateOptions, validateRows } from "../app/lib/content-schema.ts";
+import { addDefaultSettings, contentOptions, DEFAULT_STUDENT_PHOTO_URL, fieldKind, joinUsDefaults, methodsDefaults, renameContentOption, reorderList, reorderRows, validateOptions, validateRows } from "../app/lib/content-schema.ts";
 import { normalizeNews, normalizeProfessorPublications, normalizeResearch, normalizePublications, normalizeSettings, normalizeStudents } from "../app/lib/content.ts";
 
 test("single admin credentials and signed sessions reject tampering, expiry, and password rotation", () => {
@@ -62,18 +62,19 @@ test("content validation keeps hidden rows and rejects malformed content and uns
   assert.equal(imageType(Buffer.from("89504e470d0a1a0a", "hex")), "image/png");
 });
 
-test("Join us settings supply missing fields and preserve saved edits and intentional blanks", () => {
+test("Join us and Methods settings supply missing fields and preserve saved edits and intentional blanks", () => {
   const rows = [
     { key: "lab_name", value: "Our lab" },
     { key: "join_us_heading", value: "" },
     { key: "join_us_description", value: "Visit our **lab**.\nResearch stays are welcome." },
     { key: "custom_setting", value: "Keep this" },
+    { key: "methods_photo_2_image_url", value: "" },
   ];
-  const defaults = addJoinUsSettings(rows);
-  assert.equal(rows.length, 4);
+  const defaults = addDefaultSettings(rows);
+  assert.equal(rows.length, 5);
   assert.deepEqual(defaults.slice(0, rows.length), rows);
-  assert.equal(defaults.length, rows.length + Object.keys(joinUsDefaults).length - 2);
-  assert.deepEqual(addJoinUsSettings(defaults), defaults);
+  assert.equal(defaults.length, rows.length + Object.keys(joinUsDefaults).length + Object.keys(methodsDefaults).length - 3);
+  assert.deepEqual(addDefaultSettings(defaults), defaults);
   const saved = validateRows("Settings", defaults);
   const settings = normalizeSettings(saved);
   assert.equal(settings.lab_name, "Our lab");
@@ -84,6 +85,14 @@ test("Join us settings supply missing fields and preserve saved edits and intent
   assert.equal(settings.join_us_email, "eusun.han@agro.au.dk");
   assert.equal(fieldKind("join_us_email"), "email");
   assert.equal(fieldKind("join_us_description"), "textarea");
+  assert.equal(settings.methods_photo_2_image_url, "");
+  assert.equal(settings.methods_toolkit_image_url, methodsDefaults.methods_toolkit_image_url);
+  assert.equal(settings.methods_manual_url, methodsDefaults.methods_manual_url);
+  assert.equal(fieldKind("methods_facilities_text"), "textarea");
+  assert.equal(fieldKind("methods_photo_1_image_url"), "url");
+  assert.throws(() => validateRows("Settings", [{ key: "methods_manual_url", value: "javascript:alert(1)" }]));
+  assert.throws(() => validateRows("Settings", [{ key: "methods_photo_1_image_url", value: "/newpage/img/../../x.jpg" }]));
+  assert.equal(normalizeSettings([{ key: "methods_manual_url", value: "javascript:alert(1)" }]).methods_manual_url, "");
   for (const email of ["hello@lab.example", ""]) {
     assert.equal(normalizeSettings(validateRows("Settings", [{ key: "join_us_email", value: email }])).join_us_email, email);
   }

@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import rehypeSanitize from "rehype-sanitize";
 import { useRef, useState, type FormEvent, type PointerEvent } from "react";
-import { addJoinUsSettings, choiceField, contentOptions, contentTabs, contentUrl, DEFAULT_STUDENT_PHOTO_URL, fieldKind, fieldLabel, markdownUrl, renameContentOption, reorderList, reorderRows, validateOptions, type ContentRecord } from "../lib/content-schema.ts";
+import { addDefaultSettings, choiceField, contentOptions, contentTabs, contentUrl, DEFAULT_STUDENT_PHOTO_URL, fieldKind, fieldLabel, markdownUrl, renameContentOption, reorderList, reorderRows, validateOptions, type ContentRecord } from "../lib/content-schema.ts";
 import type { SheetRow } from "../lib/types.ts";
 import { FallbackImage } from "../fallback-image";
 import { insertContentImage, uploadImage } from "./upload";
@@ -24,11 +24,15 @@ function rowName(row: SheetRow, index: number) {
   return plainText(String(row.title || row.name || row.section || row.content || "Item " + (index + 1))).slice(0, 100);
 }
 type SortTarget = { kind: "item" | "option"; index: number };
+const settingGroups = [
+  ["join_us_", "Home · Join us", "Shown below News on Home. Clear Heading to hide this box. Save changes to apply your edits."],
+  ["methods_", "New page · Methods & tools", "Shown in the Methods & tools section of /newpage. Clear a title, text, or image URL to hide that part. Save changes to apply your edits."],
+];
 
 export function ContentEditor({ record, onSaved, onDirty }: {
   record: ContentRecord; onSaved: (record: ContentRecord) => void; onDirty: (dirty: boolean) => void;
 }) {
-  const [rows, setRows] = useState(() => record.tab === "Settings" ? addJoinUsSettings(record.rows) : record.rows);
+  const [rows, setRows] = useState(() => record.tab === "Settings" ? addDefaultSettings(record.rows) : record.rows);
   const [selected, setSelected] = useState(0);
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -153,7 +157,7 @@ export function ContentEditor({ record, onSaved, onDirty }: {
     const settingKey = name === "value" ? String(row.key) : name;
     const kind = fieldKind(settingKey);
     const id = record.tab + "-" + index + "-" + name;
-    const image = ["image_url", "preview_image_url", "photo_url", "hero_image_url"].includes(settingKey);
+    const image = settingKey.endsWith("image_url") || settingKey === "photo_url";
     const previewImage = record.tab === "Projects" && name === "preview_image_url";
     const projectDetails = record.tab === "Projects" && name === "details";
     return (
@@ -195,10 +199,12 @@ export function ContentEditor({ record, onSaved, onDirty }: {
       {error ? <p className="admin-error" role="alert">{error}</p> : null}
       {notice ? <p className="admin-notice" role="status">{notice}</p> : null}
       {record.tab === "Settings" ? <>
-        <div className="admin-settings-grid">{rows.map((row, index) => !String(row.key).startsWith("join_us_") ? field(index, "value", fieldLabel(String(row.key))) : null)}</div>
-        <h2 className="admin-settings-heading">Home · Join us</h2>
-        <p>Shown below News on Home. Clear Heading to hide this box. Save changes to apply your edits.</p>
-        <div className="admin-settings-grid">{rows.map((row, index) => String(row.key).startsWith("join_us_") ? field(index, "value", fieldLabel(String(row.key).slice("join_us_".length))) : null)}</div>
+        <div className="admin-settings-grid">{rows.map((row, index) => !settingGroups.some(([prefix]) => String(row.key).startsWith(prefix)) ? field(index, "value", fieldLabel(String(row.key))) : null)}</div>
+        {settingGroups.map(([prefix, heading, hint]) => <div key={prefix}>
+          <h2 className="admin-settings-heading">{heading}</h2>
+          <p>{hint}</p>
+          <div className="admin-settings-grid">{rows.map((row, index) => String(row.key).startsWith(prefix) ? field(index, "value", fieldLabel(String(row.key).slice(prefix.length))) : null)}</div>
+        </div>)}
       </> : (
         <div className="admin-content-layout">
           <aside className="admin-item-list" aria-label="Items">

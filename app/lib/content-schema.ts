@@ -12,9 +12,35 @@ export const joinUsDefaults = {
   join_us_course_description: "A PhD course on root research methods, taught by the lab and colleagues.",
 };
 
-export function addJoinUsSettings(rows: SheetRow[]): SheetRow[] {
+export const methodsDefaults = {
+  methods_heading: "Methods & tools",
+  methods_manual_label: "Our evolving root methods manual",
+  methods_manual_url: "https://zenodo.org/records/20542454",
+  methods_segmentation_title: "Root image segmentation",
+  methods_segmentation_text: "Deep-learning segmentation (RootPainter) turns root images into measurable traits.",
+  methods_block_1_title: "Isotope labelling",
+  methods_block_1_text: "Tracers placed in deep soil layers show which crops take up nutrients from where.",
+  methods_block_2_title: "Phenotyping",
+  methods_block_2_text: "3D plant phenotyping system, drones, hyperspectral and micro-CT imaging, LiCOR photosynthesis measurements.",
+  methods_facilities_title: "Facilities",
+  methods_facilities_text: "Semi-field facility, greenhouse and growth chambers.",
+  methods_toolkit_image_url: "/newpage/img/methods/toolkit.jpg",
+  methods_toolkit_image_alt: "Lab methods: CT scanning, 3D root construction, soil sensing, soil sampling, root imaging, root processing, AI-based image segmentation, isotope labelling, lysimeter sampling",
+  methods_toolkit_caption: "Our toolkit, from soil sampling to AI segmentation",
+  methods_photo_1_image_url: "/newpage/img/methods/root-cross-section.jpg",
+  methods_photo_1_image_alt: "Stained root cross-section under the microscope",
+  methods_photo_1_caption: "Root cross-section, bright-field microscopy",
+  methods_photo_2_image_url: "/newpage/img/methods/seed-microct.jpg",
+  methods_photo_2_image_alt: "Segmented seeds in micro-CT image analysis",
+  methods_photo_2_caption: "Seed micro-CT image analysis",
+  methods_photo_3_image_url: "/newpage/img/methods/3d-phenotyping.jpg",
+  methods_photo_3_image_alt: "3D scan of a potted seedling",
+  methods_photo_3_caption: "3D plant phenotyping",
+};
+
+export function addDefaultSettings(rows: SheetRow[]): SheetRow[] {
   const keys = new Set(rows.map((row) => row.key));
-  return [...rows, ...Object.entries(joinUsDefaults)
+  return [...rows, ...Object.entries({ ...joinUsDefaults, ...methodsDefaults })
     .filter(([key]) => !keys.has(key))
     .map(([key, value]) => ({ key, value }))];
 }
@@ -92,7 +118,7 @@ export function fieldKind(name: string) {
   if (name === "month") return "date";
   if (name.endsWith("_url")) return "url";
   if (name === "email" || name.endsWith("_email")) return "email";
-  if (["value", "content", "summary", "details", "bio", "short_bio", "subtext", "research_topics", "authors", "join_us_intro", "join_us_description", "join_us_course_description"].includes(name)) return "textarea";
+  if (["value", "content", "summary", "details", "bio", "short_bio", "subtext", "research_topics", "authors", "join_us_intro", "join_us_description", "join_us_course_description"].includes(name) || (name.startsWith("methods_") && name.endsWith("_text"))) return "textarea";
   return "text";
 }
 
@@ -107,6 +133,7 @@ export function contentUrl(value: unknown, allowMailto = false) {
   const input = value.trim();
   if (/^\/media\/[0-9a-f-]{36}$/i.test(input)) return input;
   if (/^\/projects\/[a-z0-9-]+\.(svg|mp4|webm|vtt)$/.test(input)) return input;
+  if (/^\/newpage\/img\/[a-z0-9/-]+\.(jpg|png|webp)$/.test(input)) return input;
   try {
     const url = new URL(input);
     return ["https:", "http:", ...(allowMailto ? ["mailto:"] : [])].includes(url.protocol) ? input : "";
@@ -168,8 +195,8 @@ export function validateRows(tab: ContentTab, value: unknown): SheetRow[] {
       }
       row[field] = cell;
     }
-    if (tab === "Settings" && row.key === "hero_image_url" && row.value && !contentUrl(String(row.value))) {
-      throw new Error("Use a valid image URL for Hero image URL.");
+    if (tab === "Settings" && String(row.key).endsWith("_url") && row.value && !contentUrl(String(row.value))) {
+      throw new Error("Use a valid URL for " + fieldLabel(String(row.key)) + ".");
     }
     if (tab === "Settings" && row.key === "join_us_email" && row.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(row.value).trim())) {
       throw new Error("Use a valid email address for Join us.");

@@ -9,10 +9,11 @@ import type {
   Settings,
   Student,
 } from "./types.ts";
-import { joinUsDefaults } from "./content-schema.ts";
+import { joinUsDefaults, methodsDefaults } from "./content-schema.ts";
 
 export const sampleSettings: Settings = {
   ...joinUsDefaults,
+  ...methodsDefaults,
   lab_name: "Eusun Han's Lab",
   tagline: "Curious minds, careful research, meaningful impact.",
   introduction:

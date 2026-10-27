@@ -8,9 +8,12 @@ export async function uploadImage(file: File) {
   return result.url as string;
 }
 
-export function insertContentImage(text: string, url: string, position: number) {
-  const image = `\n\n![Project image](${url})\n\n`;
+export const projectImage = { alt: "Project image", maxLength: 30000, limitError: "Keep the project description under 30,000 characters." };
+export const blogImage = { alt: "Blog image", maxLength: 300000, limitError: "Keep the article under 300,000 characters." };
+
+export function insertContentImage(text: string, url: string, position: number, { alt, maxLength, limitError } = projectImage) {
+  const image = `\n\n![${alt}](${url})\n\n`;
   const value = text.slice(0, position) + image + text.slice(position);
-  if (value.length > 30000) throw new Error("Keep the project description under 30,000 characters.");
+  if (value.length > maxLength) throw new Error(limitError);
   return { value, cursor: position + image.length };
 }
