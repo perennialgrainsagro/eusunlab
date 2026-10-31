@@ -46,8 +46,8 @@ Only an authenticated administrator can create or edit a blog post.
 Duplicate blog URLs automatically receive a numbered suffix, such as `post-2`.
 Saving shows a success alert and clears the form for a new post. Saved posts
 remain in the post list for editing and previewing; adjusted URLs appear in the alert.
-Home shows the latest three published articles beside the hero in a vertical sidebar with
-dates, titles, and one-line summaries with ellipses. **More** links to /blog; drafts stay hidden.
+Both home pages show the latest three published articles. On the legacy home page,
+the sidebar's **More** link opens `/legacy_page/blog`; drafts stay hidden.
 The dashboard prevents overwriting edits saved from another browser window.
 Drag content items in the dashboard list to reorder them, then save. Arrow
 buttons also support keyboard and touch use. Order numbers update automatically;
@@ -97,13 +97,13 @@ Use the values generated in .env.local.
 | Projects | display_order, title, summary, preview_image_url, details, image_url, image_alt, video_url, video_caption, video_captions_url, link_label, link_url, visible |
 | Publications | category, year, display_order, venue, title, authors, paper_url, project_url, code_url, video_url, visible |
 
-Home displays the first three visible `Research` rows, sorted by `display_order`.
+The legacy home page displays the first three visible `Research` rows, sorted by `display_order`.
 Each card shows `image_url`, `title`, and the first sentence of `summary`, and the entire card links to
 Research. Edit them together under **Research / Home cards** in the dashboard;
 saved changes update both pages.
 
-`/projects` lists clickable previews with each project's image, title, and a short
-summary. Each entry opens `/projects/<title-slug>` with the full Markdown description,
+`/legacy_page/projects` lists clickable previews with each project's image, title, and a short
+summary. Each entry opens `/legacy_page/projects/<title-slug>` with the full Markdown description,
 inline images, optional video, and related link. Titles generate the URL, so renaming
 a project changes its address. Initialize the Projects database section once with
 `npm run projects:setup`; it adds two clearly marked examples and keeps existing
@@ -140,7 +140,7 @@ description, contact label and email, and course title and description under
 These use the `join_us_*` Settings keys. Existing content automatically receives
 the reference text as defaults; saved edits and intentionally blank fields are kept.
 Clear **Heading** to hide the box or **Email** to hide its contact button.
-The **Methods & tools** section of `/newpage` uses the `methods_*` Settings keys,
+The **Methods & tools** section of `/` uses the `methods_*` Settings keys,
 edited under **Site settings → New page · Methods & tools**: heading, manual link,
 segmentation text, two method blocks, facilities, the toolkit image, and three photos.
 They default to the reference content the same way; clear a field to hide that part.
@@ -199,9 +199,15 @@ on page refresh without rebuilding.
 
 ## Search engine discovery
 
+The current design uses `/`, `/people/professor`, `/publications`, `/blog`,
+`/blog/<slug>`, and `/projects/<slug>`. The previous design and all its pages
+live under `/legacy_page`. Old `/newpage` page URLs redirect to the current
+addresses; images remain available under `/newpage/img`.
+
 `/robots.txt` allows crawling and points to `/sitemap.xml`. The sitemap includes
-the eight public pages, visible project detail pages, and all published blog posts, with each post's last
-updated date. Drafts, admin pages, and API endpoints are excluded from the sitemap.
+the current design's public pages, visible project detail pages, and all published blog posts, with each post's last
+updated date. Legacy pages (`/legacy_page` and all subpages), drafts, admin pages,
+and API endpoints are excluded from the sitemap.
 Both files use the request's site address and update without rebuilding.
 Admin pages retain their `noindex` metadata.
 

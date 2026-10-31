@@ -4,7 +4,7 @@ import { SESSION_COOKIE, validSession } from "../../../lib/admin-auth.ts";
 import { readPost } from "../../../lib/database.ts";
 import { loadSettings } from "../../../lib/content.ts";
 import { SiteFrame } from "../../../site-components";
-import { BlogArticle } from "../../../blog/article";
+import { BlogArticle } from "../../../legacy_page/blog/article";
 
 export const metadata = { title: "Blog preview", robots: { index: false, follow: false } };
 

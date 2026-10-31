@@ -26,7 +26,7 @@ function rowName(row: SheetRow, index: number) {
 type SortTarget = { kind: "item" | "option"; index: number };
 const settingGroups = [
   ["join_us_", "Home · Join us", "Shown below News on Home. Clear Heading to hide this box. Save changes to apply your edits."],
-  ["methods_", "New page · Methods & tools", "Shown in the Methods & tools section of /newpage. Clear a title, text, or image URL to hide that part. Save changes to apply your edits."],
+  ["methods_", "New page · Methods & tools", "Shown in the Methods & tools section of the home page. Clear a title, text, or image URL to hide that part. Save changes to apply your edits."],
 ];
 
 export function ContentEditor({ record, onSaved, onDirty }: {

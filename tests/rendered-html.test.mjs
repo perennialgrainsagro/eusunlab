@@ -60,17 +60,17 @@ after(async () => {
 });
 
 const routes = [
-  ["/", "Eusun Han's Lab"],
-  ["/members/professor", "Eusun Han"],
-  ["/members/students", "Graduate Student 01"],
-  ["/members/alumni", "Alumni Example 01"],
-  ["/research", "Human-Centered AI"],
-  ["/projects", "Root Phenotyping for Resilient Crops"],
-  ["/publications", "Example Paper"],
-  ["/blog", "No blog posts yet"],
+  ["/legacy_page", "Eusun Han's Lab"],
+  ["/legacy_page/members/professor", "Eusun Han"],
+  ["/legacy_page/members/students", "Graduate Student 01"],
+  ["/legacy_page/members/alumni", "Alumni Example 01"],
+  ["/legacy_page/research", "Human-Centered AI"],
+  ["/legacy_page/projects", "Root Phenotyping for Resilient Crops"],
+  ["/legacy_page/publications", "Example Paper"],
+  ["/legacy_page/blog", "No blog posts yet"],
 ];
 
-test("robots and sitemap use the current site address and include only public pages", async () => {
+test("robots and sitemap use the current site address and exclude legacy pages", async () => {
   for (const origin of [baseUrl, "https://lab.example"]) {
     const headers = {
       "x-forwarded-host": new URL(origin).host,
@@ -87,8 +87,10 @@ test("robots and sitemap use the current site address and include only public pa
     const xml = await sitemap.text();
     assert.match(xml, /xmlns="http:\/\/www.sitemaps.org\/schemas\/sitemap\/0.9"/);
     const urls = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1]);
-    assert.deepEqual(urls, [...routes.map(([path]) => new URL(path, origin).href), ...["root-phenotyping-for-resilient-crops", "image-based-plant-growth-monitoring"].map((slug) => new URL(`/projects/${slug}`, origin).href)]);
-    assert.doesNotMatch(xml, /\/admin|\/api\//);
+    const pageUrls = ["/", "/people/professor", "/publications", "/blog"].map((path) => new URL(path, origin).href);
+    const projectUrls = ["root-phenotyping-for-resilient-crops", "image-based-plant-growth-monitoring"].map((slug) => new URL(`/projects/${slug}`, origin).href);
+    assert.deepEqual(urls, [...pageUrls, ...projectUrls]);
+    assert.doesNotMatch(xml, /\/legacy_page|\/admin|\/api\//);
   }
 });
 
@@ -103,22 +105,79 @@ for (const [pathname, expected] of routes) {
     assert.match(html, /class="member-trigger"[^>]*>Team<\/button>/);
     assert.match(html, /class="mobile-lab-name"[^>]*>Eusun Han&#x27;s Lab<\/a>/);
     assert.match(html, /aria-controls="mobile-navigation"/);
+    assert.match(html, /class="brand" href="\/legacy_page"/);
+    assert.match(html, /href="\/legacy_page"[^>]*>Home<\/a>/);
+    for (const [, href] of [...html.matchAll(/<a\b[^>]*href="([^"]+)"/g)]) {
+      if (href.startsWith("/")) assert.ok(href.startsWith("/legacy_page"), `Legacy navigation stays under /legacy_page: ${href}`);
+    }
     assert.match(html, /<\/header><div class="site-scroll">/);
     assert.doesNotMatch(html, /<details|<summary/i);
     assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);
   });
 }
 
+test("the root renders the new home page with its layout, metadata, and detail links", async () => {
+  const response = await fetch(baseUrl + "/");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /class="newlab /);
+  assert.match(html, /data-roots-canvas/);
+  assert.match(html, /<title>Eusun Han Lab · Root science, plant phenomics &amp; perennial agronomy<\/title>/);
+  assert.match(html, /name="theme-color" content="#1d1915"/);
+  for (const path of ["/people/professor", "/publications", "/blog", "/projects/root-phenotyping-for-resilient-crops"]) {
+    assert.ok(html.includes(`href="${path}"`));
+  }
+  assert.doesNotMatch(html, /class="site-frame"/);
+  assert.doesNotMatch(html, /<a\b[^>]*href="\/(?:newpage|legacy_page)/);
+  assert.equal((await fetch(baseUrl + "/newpage/img/logo.png")).status, 200);
+});
+
+test("the old newpage address redirects to the root and preserves query parameters", async () => {
+  for (const [oldPath, newPath] of [
+    ["/newpage", "/"],
+    ["/newpage/people/professor", "/people/professor"],
+    ["/newpage/publications", "/publications"],
+    ["/newpage/blog", "/blog"],
+    ["/newpage/blog/example-post", "/blog/example-post"],
+    ["/newpage/projects/root-phenotyping-for-resilient-crops", "/projects/root-phenotyping-for-resilient-crops"],
+  ]) {
+    const response = await fetch(baseUrl + oldPath + "?preview=1", { redirect: "manual" });
+    assert.equal(response.status, 308);
+    assert.equal(response.headers.get("location"), newPath + "?preview=1");
+  }
+});
+
+test("new design detail pages return to sections on the root home page", async () => {
+  for (const [path, section] of [
+    ["/people/professor", "people"],
+    ["/publications", "publications"],
+    ["/blog", "blog"],
+    ["/projects/root-phenotyping-for-resilient-crops", "projects"],
+    ["/projects/image-based-plant-growth-monitoring", "projects"],
+  ]) {
+    const response = await fetch(baseUrl + path);
+    assert.equal(response.status, 200);
+    const html = await response.text();
+    assert.match(html, /class="newlab /);
+    assert.ok(html.includes(`href="/#${section}"`));
+    assert.doesNotMatch(html, /<a\b[^>]*href="\/(?:newpage|legacy_page)/);
+    assert.doesNotMatch(html, /class="site-frame"/);
+  }
+  assert.equal((await fetch(baseUrl + "/projects/missing-project")).status, 404);
+  assert.equal((await fetch(baseUrl + "/blog/missing-post")).status, 404);
+  assert.equal((await fetch(baseUrl + "/legacy_page/blog/missing-post")).status, 404);
+});
+
 test("Projects lists linked previews, titles, and summaries without the full descriptions or videos", async () => {
-  const html = await (await fetch(baseUrl + "/projects")).text();
+  const html = await (await fetch(baseUrl + "/legacy_page/projects")).text();
   assert.match(html, /<h1>Projects<\/h1>/);
-  const projectLinks = [...html.matchAll(/<a\b[^>]*>/g)].filter(([link]) => /href="\/projects"/.test(link) && /aria-current="page"/.test(link));
+  const projectLinks = [...html.matchAll(/<a\b[^>]*>/g)].filter(([link]) => /href="\/legacy_page\/projects"/.test(link) && /aria-current="page"/.test(link));
   assert.equal(projectLinks.length, 2);
   assert.match(html, /src="\/projects\/root-phenotyping.svg"/);
   assert.match(html, /src="\/projects\/plant-monitoring.svg"/);
   assert.match(html, /Connecting root architecture with water and nutrient use/);
-  assert.match(html, /href="\/projects\/root-phenotyping-for-resilient-crops"/);
-  assert.match(html, /href="\/projects\/image-based-plant-growth-monitoring"/);
+  assert.match(html, /href="\/legacy_page\/projects\/root-phenotyping-for-resilient-crops"/);
+  assert.match(html, /href="\/legacy_page\/projects\/image-based-plant-growth-monitoring"/);
   assert.doesNotMatch(html, /<video|<iframe|<h3>Project overview|root-workflow\.svg|flower\.mp4|It is not footage from the lab/);
   for (const asset of ["root-phenotyping.svg", "root-workflow.svg", "plant-monitoring.svg"]) {
     assert.equal((await fetch(baseUrl + "/projects/" + asset)).status, 200);
@@ -126,18 +185,18 @@ test("Projects lists linked previews, titles, and summaries without the full des
 });
 
 test("project detail URLs render their own full content, media, metadata, and return link", async () => {
-  const root = await fetch(baseUrl + "/projects/root-phenotyping-for-resilient-crops");
+  const root = await fetch(baseUrl + "/legacy_page/projects/root-phenotyping-for-resilient-crops");
   assert.equal(root.status, 200);
   const rootHtml = await root.text();
   assert.match(rootHtml, /<h1>Root Phenotyping for Resilient Crops<\/h1>/);
   assert.match(rootHtml, /<title>Root Phenotyping for Resilient Crops<\/title>/);
   assert.match(rootHtml, /<strong>root imaging<\/strong>/);
   assert.match(rootHtml, /src="\/projects\/root-workflow.svg"/);
-  assert.match(rootHtml, /href="\/projects">← All projects<\/a>/);
-  assert.ok([...rootHtml.matchAll(/<a\b[^>]*>/g)].some(([link]) => /href="\/projects"/.test(link) && /aria-current="page"/.test(link)));
+  assert.match(rootHtml, /href="\/legacy_page\/projects">← All projects<\/a>/);
+  assert.ok([...rootHtml.matchAll(/<a\b[^>]*>/g)].some(([link]) => /href="\/legacy_page\/projects"/.test(link) && /aria-current="page"/.test(link)));
   assert.doesNotMatch(rootHtml, /Image-Based Plant Growth Monitoring|flower\.mp4/);
 
-  const growth = await fetch(baseUrl + "/projects/image-based-plant-growth-monitoring");
+  const growth = await fetch(baseUrl + "/legacy_page/projects/image-based-plant-growth-monitoring");
   assert.equal(growth.status, 200);
   const growthHtml = await growth.text();
   assert.match(growthHtml, /<h1>Image-Based Plant Growth Monitoring<\/h1>/);
@@ -145,20 +204,20 @@ test("project detail URLs render their own full content, media, metadata, and re
   assert.match(growthHtml, /flower.mp4/);
   assert.match(growthHtml, /It is not footage from the lab/);
   assert.doesNotMatch(growthHtml, /Root Phenotyping for Resilient Crops/);
-  assert.equal((await fetch(baseUrl + "/projects/missing-project")).status, 404);
+  assert.equal((await fetch(baseUrl + "/legacy_page/projects/missing-project")).status, 404);
 });
 
 test("alumni renders without profile images", async () => {
-  const response = await fetch(baseUrl + "/members/alumni");
+  const response = await fetch(baseUrl + "/legacy_page/members/alumni");
   const html = await response.text();
   assert.doesNotMatch(html, /member-image|portrait/i);
 });
 
 test("Members renders grouped profile rows with optional, formatted introductions", async () => {
-  const html = await (await fetch(baseUrl + "/members/students")).text();
+  const html = await (await fetch(baseUrl + "/legacy_page/members/students")).text();
   assert.match(html, /<h1>Members<\/h1>/);
-  assert.match(html, /href="\/members\/professor"[^>]*>PI<\/a>/);
-  assert.match(html, /href="\/members\/students"[^>]*>Members<\/a>/);
+  assert.match(html, /href="\/legacy_page\/members\/professor"[^>]*>PI<\/a>/);
+  assert.match(html, /href="\/legacy_page\/members\/students"[^>]*>Members<\/a>/);
   const lists = [...html.matchAll(/<ul class="member-list" role="list">([\s\S]*?)<\/ul>/g)];
   assert.equal(lists.length, 2);
   const rows = lists.flatMap((list) => [...list[1].matchAll(/<li><article class="member-row">([\s\S]*?)<\/article><\/li>/g)]);
@@ -172,15 +231,15 @@ test("Members renders grouped profile rows with optional, formatted introduction
   for (const row of rows.slice(1)) assert.doesNotMatch(row[1], /class="member-bio"/);
 });
 
-test("Home cards link to matching Research sections and share their titles, summaries, and images", async () => {
+test("Legacy home cards link to matching Research sections and share their titles, summaries, and images", async () => {
   const [html, researchHtml] = await Promise.all(
-    ["/", "/research"].map(async (pathname) => (await fetch(baseUrl + pathname)).text()),
+    ["/legacy_page", "/legacy_page/research"].map(async (pathname) => (await fetch(baseUrl + pathname)).text()),
   );
   const cards = [...html.matchAll(/<article class="home-card linked-content">([\s\S]*?)<\/article>/g)];
   const research = [...researchHtml.matchAll(/<article[^>]*class="research-item[^"]*"[^>]*>([\s\S]*?)<\/article>/g)];
   assert.equal(cards.length, 3);
   for (const [index, card] of cards.entries()) {
-    const target = card[0].match(/href="\/research#([^"]+)"/)?.[1];
+    const target = card[0].match(/href="\/legacy_page\/research#([^"]+)"/)?.[1];
     assert.ok(target);
     assert.equal(research[index][0].match(/id="([^"]+)"/)?.[1], target);
     assert.equal(research.filter((item) => item[0].includes(`id="${target}"`)).length, 1);
@@ -203,19 +262,19 @@ test("Admin pages and APIs block framing and send defensive browser headers", as
   }
 });
 
-test("Home shows the recent blog section and a More link when there are no published posts", async () => {
-  const html = await (await fetch(baseUrl + "/")).text();
+test("Legacy home shows the recent blog section and a More link when there are no published posts", async () => {
+  const html = await (await fetch(baseUrl + "/legacy_page")).text();
   assert.match(html, /<aside class="home-blog" aria-labelledby="home-blog-title">/);
   assert.match(html, /<h2 id="home-blog-title">Latest blog posts<\/h2>/);
   assert.match(html, /No blog posts yet\./);
   const moreLink = html.match(/<a[^>]*class="home-blog-more"[^>]*>/)?.[0] ?? "";
-  assert.match(moreLink, /href="\/blog"/);
+  assert.match(moreLink, /href="\/legacy_page\/blog"/);
   assert.match(moreLink, /aria-label="More blog posts"/);
   assert.doesNotMatch(html, /class="home-blog-item"/);
 });
 
-test("Home ends with the Join us invitation, email button, and upcoming PhD course", async () => {
-  const html = await (await fetch(baseUrl + "/")).text();
+test("Legacy home ends with the Join us invitation, email button, and upcoming PhD course", async () => {
+  const html = await (await fetch(baseUrl + "/legacy_page")).text();
   const box = html.match(/<section class="home-join" aria-labelledby="home-join-title">([\s\S]*?)<\/section>/);
   assert.ok(box);
   assert.match(box[1], /<h1 id="home-join-title">Join us<\/h1>/);
@@ -231,7 +290,7 @@ test("Home ends with the Join us invitation, email button, and upcoming PhD cour
 
 test("professor publications render as a numbered citation list with inline bold and links", async () => {
   const [professorHtml, labHtml] = await Promise.all(
-    ["/members/professor", "/publications"].map(async (pathname) => (await fetch(baseUrl + pathname)).text()),
+    ["/legacy_page/members/professor", "/legacy_page/publications"].map(async (pathname) => (await fetch(baseUrl + pathname)).text()),
   );
   const lists = [...professorHtml.matchAll(/<ol class="professor-publication-list" role="list">([\s\S]*?)<\/ol>/g)];
   assert.equal(lists.length, 2);

@@ -49,9 +49,9 @@ function Header({ settings, active, memberPage }: {
   memberPage?: string;
 }) {
   const memberLinks = [
-    ["PI", "/members/professor"],
-    ["Members", "/members/students"],
-    ["Alumni", "/members/alumni"],
+    ["PI", "/legacy_page/members/professor"],
+    ["Members", "/legacy_page/members/students"],
+    ["Alumni", "/legacy_page/members/alumni"],
   ];
 
   return (
@@ -59,7 +59,7 @@ function Header({ settings, active, memberPage }: {
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <div className="site-masthead">
         <div className="brand-shell">
-          <Link className="brand" href="/">
+          <Link className="brand" href="/legacy_page">
             <Image
               className="brand-logo"
               src="/logos/logo-transparent.png"
@@ -75,23 +75,23 @@ function Header({ settings, active, memberPage }: {
       <header className="site-header">
         <div className="nav-shell">
           <nav className="site-nav" aria-label="Primary navigation">
-            <Link className={`nav-link ${active === "home" ? "active" : ""}`} href="/">Home</Link>
+            <Link className={`nav-link ${active === "home" ? "active" : ""}`} href="/legacy_page">Home</Link>
             <div className={`member-menu ${active === "members" ? "active" : ""}`}>
               <button className="member-trigger" type="button" aria-haspopup="true">
                 Team
               </button>
               <div className="member-submenu">
                 {memberLinks.map(([label, href]) => (
-                  <Link key={href} href={href} className={href === `/members/${memberPage}` ? "active" : ""}>
+                  <Link key={href} href={href} className={href === `/legacy_page/members/${memberPage}` ? "active" : ""}>
                     {label}
                   </Link>
                 ))}
               </div>
             </div>
-            <Link className={`nav-link ${active === "research" ? "active" : ""}`} href="/research">Research</Link>
-            <Link className={`nav-link ${active === "projects" ? "active" : ""}`} href="/projects" aria-current={active === "projects" ? "page" : undefined}>Projects</Link>
-            <Link className={`nav-link ${active === "publications" ? "active" : ""}`} href="/publications">Publications</Link>
-            <Link className={"nav-link " + (active === "blog" ? "active" : "")} href="/blog">Blog</Link>
+            <Link className={`nav-link ${active === "research" ? "active" : ""}`} href="/legacy_page/research">Research</Link>
+            <Link className={`nav-link ${active === "projects" ? "active" : ""}`} href="/legacy_page/projects" aria-current={active === "projects" ? "page" : undefined}>Projects</Link>
+            <Link className={`nav-link ${active === "publications" ? "active" : ""}`} href="/legacy_page/publications">Publications</Link>
+            <Link className={"nav-link " + (active === "blog" ? "active" : "")} href="/legacy_page/blog">Blog</Link>
           </nav>
           <MobileNavigation labName={formatText(settings.lab_name || "Eusun Han Lab", false)} active={active} memberPage={memberPage} memberLinks={memberLinks} />
         </div>
@@ -104,7 +104,7 @@ function Footer({ settings }: { settings: Settings }) {
   return (
     <footer className="site-footer">
       <div className="container footer-grid">
-        <Link className="footer-logo" href="/" aria-label="Eusun Han Lab home">
+        <Link className="footer-logo" href="/legacy_page" aria-label="Eusun Han Lab home">
           <Image src="/logos/logo-symbol.png" alt="" width={192} height={192} unoptimized />
         </Link>
         <div>

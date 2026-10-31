@@ -88,12 +88,12 @@ export async function HomePage() {
             {recentPosts.length ? recentPosts.map((post) => (
               <article className="home-blog-item" key={post.id}>
                 {post.published_at ? <time dateTime={post.published_at}>{new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(post.published_at))}</time> : null}
-                <h3 className="linked-content">{formatText(post.title)}<Link className="content-link-overlay" href={"/blog/" + encodeURIComponent(post.slug)} aria-label={plainText(post.title)} /></h3>
+                <h3 className="linked-content">{formatText(post.title)}<Link className="content-link-overlay" href={"/legacy_page/blog/" + encodeURIComponent(post.slug)} aria-label={plainText(post.title)} /></h3>
                 {post.excerpt ? <p>{formatText(post.excerpt)}</p> : null}
               </article>
             )) : <p className="home-blog-empty">No blog posts yet.</p>}
           </div>
-          <Link className="home-blog-more" href="/blog" aria-label="More blog posts"><span>More</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></Link>
+          <Link className="home-blog-more" href="/legacy_page/blog" aria-label="More blog posts"><span>More</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></Link>
         </aside>
         {cards.length ? (
           <section className="home-card-section" aria-label="Research areas">
@@ -109,7 +109,7 @@ export async function HomePage() {
                     <h2>{formatText(card.title)}</h2>
                     {card.summary ? <p>{formatText(firstSentence(card.summary))}</p> : null}
                   </div>
-                  <Link href={`/research#research-${index + 1}`} className="content-link-overlay" aria-label={plainText(card.title)} />
+                  <Link href={`/legacy_page/research#research-${index + 1}`} className="content-link-overlay" aria-label={plainText(card.title)} />
                 </article>
               ))}
             </div>
@@ -398,7 +398,7 @@ export async function ProjectsPage() {
                   <h2>{formatText(item.title)}</h2>
                   {item.summary ? <p className="summary">{formatText(item.summary)}</p> : null}
                 </div>
-                <Link href={`/projects/${encodeURIComponent(item.slug)}`} className="content-link-overlay" aria-label={plainText(item.title)} />
+                <Link href={`/legacy_page/projects/${encodeURIComponent(item.slug)}`} className="content-link-overlay" aria-label={plainText(item.title)} />
               </article>
             );
           }) : <EmptyState>Projects will be added soon.</EmptyState>}

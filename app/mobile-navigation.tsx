@@ -26,7 +26,7 @@ export function MobileNavigation({ labName, active, memberPage, memberLinks }: {
 
   return (
     <>
-    <Link className={"mobile-lab-name" + (showLabName ? " visible" : "")} href="/" onClick={close}>{labName}</Link>
+    <Link className={"mobile-lab-name" + (showLabName ? " visible" : "")} href="/legacy_page" onClick={close}>{labName}</Link>
     <div className="mobile-menu">
       <button
         className="menu-toggle"
@@ -41,7 +41,7 @@ export function MobileNavigation({ labName, active, memberPage, memberLinks }: {
         <span />
       </button>
       <nav id="mobile-navigation" className="mobile-nav" aria-label="Mobile navigation" hidden={!open}>
-        <Link className={active === "home" ? "active" : ""} href="/" onClick={close}>Home</Link>
+        <Link className={active === "home" ? "active" : ""} href="/legacy_page" onClick={close}>Home</Link>
         <div className={`mobile-member-menu ${active === "members" ? "active" : ""}`}>
           <span>Team</span>
           <div className="mobile-member-submenu">
@@ -49,7 +49,7 @@ export function MobileNavigation({ labName, active, memberPage, memberLinks }: {
               <Link
                 key={href}
                 href={href}
-                className={href === `/members/${memberPage}` ? "active" : ""}
+                className={href === `/legacy_page/members/${memberPage}` ? "active" : ""}
                 onClick={close}
               >
                 {label}
@@ -57,10 +57,10 @@ export function MobileNavigation({ labName, active, memberPage, memberLinks }: {
             ))}
           </div>
         </div>
-        <Link className={active === "research" ? "active" : ""} href="/research" onClick={close}>Research</Link>
-        <Link className={active === "projects" ? "active" : ""} href="/projects" aria-current={active === "projects" ? "page" : undefined} onClick={close}>Projects</Link>
-        <Link className={active === "publications" ? "active" : ""} href="/publications" onClick={close}>Publications</Link>
-        <Link className={active === "blog" ? "active" : ""} href="/blog" onClick={close}>Blog</Link>
+        <Link className={active === "research" ? "active" : ""} href="/legacy_page/research" onClick={close}>Research</Link>
+        <Link className={active === "projects" ? "active" : ""} href="/legacy_page/projects" aria-current={active === "projects" ? "page" : undefined} onClick={close}>Projects</Link>
+        <Link className={active === "publications" ? "active" : ""} href="/legacy_page/publications" onClick={close}>Publications</Link>
+        <Link className={active === "blog" ? "active" : ""} href="/legacy_page/blog" onClick={close}>Blog</Link>
       </nav>
     </div>
     </>

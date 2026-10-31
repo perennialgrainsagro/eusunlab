@@ -126,7 +126,7 @@ test("Neon admin login, content edits, image upload, and blog publishing work en
       assert.equal(reordered.status, 200);
       edit.saved = await reordered.json();
       assert.deepEqual((await (await request(path)).json()).options, reorderedOptions, "Save the explicit catalog order.");
-      const publicHtml = await (await request(tab === "Students" ? "/members/students" : "/publications")).text();
+      const publicHtml = await (await request(tab === "Students" ? "/legacy_page/members/students" : "/legacy_page/publications")).text();
       if (tab === "Students") {
         assert.ok(publicHtml.includes(bioMarker), "The Members list must show the saved introduction.");
         assert.match(publicHtml, /<p>Builds <strong>research tools<\/strong>\.<\/p>/);
@@ -143,7 +143,7 @@ test("Neon admin login, content edits, image upload, and blog publishing work en
       assert.equal(removed.status, 200);
       edit.saved = await removed.json();
       assert.deepEqual(edit.saved.options, options, "Unused choices can be deleted without changing content.");
-      if (tab === "Students") assert.ok(!(await (await request("/members/students")).text()).includes(bioMarker), "Remove the temporary introduction when restoring member content.");
+      if (tab === "Students") assert.ok(!(await (await request("/legacy_page/members/students")).text()).includes(bioMarker), "Remove the temporary introduction when restoring member content.");
     }
     const png = await sharp({ create: { width: 2400, height: 1800, channels: 4, background: { r: 12, g: 110, b: 25, alpha: 0.4 } } }).png().toBuffer();
     const upload = new FormData();
@@ -240,6 +240,12 @@ test("Neon admin login, content edits, image upload, and blog publishing work en
     assert.ok(html.includes(imageUrl));
     assert.ok(html.includes('alt="Uploaded main image"'), "Render the uploaded main image on the article.");
     assert.doesNotMatch(html, /<script>alert\('unsafe'\)/);
+    assert.match(html, /class="newlab /);
+    assert.match(html, /href="\/blog"/);
+    const legacyHtml = await (await request("/legacy_page/blog/" + input.slug)).text();
+    assert.ok(legacyHtml.includes(input.title));
+    assert.match(legacyHtml, /href="\/legacy_page\/blog"/);
+    assert.doesNotMatch(legacyHtml, /class="newlab /);
     const listHtml = await (await request("/blog")).text();
     assert.ok(listHtml.includes(input.title));
     assert.ok(listHtml.includes(imageUrl), "Render the main image on the post list.");
@@ -251,15 +257,15 @@ test("Neon admin login, content edits, image upload, and blog publishing work en
       const recent = await response.json();
       temporaryPostIds.push(recent.id); recentPosts.unshift(recent);
     }
-    const homeHtml = await (await request("/")).text();
+    const homeHtml = await (await request("/legacy_page")).text();
     const previews = [...homeHtml.matchAll(/<article class="home-blog-item">([\s\S]*?)<\/article>/g)];
     assert.equal(previews.length, 3, "Home shows at most three posts.");
     for (let index = 0; index < 3; index++) {
       assert.ok(previews[index][1].includes(recentPosts[index].title), "Home orders posts newest first.");
       assert.ok(previews[index][1].includes(recentPosts[index].excerpt), "Include a brief summary.");
-      assert.ok(previews[index][1].includes('href="/blog/' + recentPosts[index].slug + '"'), "Preview titles link to the full article.");
+      assert.ok(previews[index][1].includes('href="/legacy_page/blog/' + recentPosts[index].slug + '"'), "Preview titles link to the full article.");
     }
-    assert.match(homeHtml, /class="home-blog-more"[^>]*href="\/blog"/);
+    assert.match(homeHtml, /class="home-blog-more"[^>]*href="\/legacy_page\/blog"/);
     assert.equal((await request("/api/admin/posts/" + post.id, "PUT", { ...post, title: "Changed", updated_at: "2000-01-01" })).status, 409);
     const externalImage = "https://example.com/main-image.jpg";
     const replaced = await request("/api/admin/posts/" + post.id, "PUT", { ...post, main_image_url: externalImage, main_image_alt: "External main image" });
