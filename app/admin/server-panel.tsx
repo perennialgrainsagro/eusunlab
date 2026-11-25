@@ -32,14 +32,14 @@ export function ServerPanel() {
     return request().then(setUsage, (error) => setError(error instanceof Error ? error.message : "Unable to load server usage.")).finally(() => setBusy(false));
   }
   useEffect(() => { void load(); }, []);
-  async function removeUnused() {
-    if (!usage?.unused.length) return;
-    const total = size(usage.unused.reduce((sum, image) => sum + image.bytes, 0));
-    if (!window.confirm(`Permanently delete ${usage.unused.length} unused images (${total})? This cannot be undone.`)) return;
+  async function removeImages(images: Usage["unused"]) {
+    if (!images.length) return;
+    const total = size(images.reduce((sum, image) => sum + image.bytes, 0));
+    if (!window.confirm(`Permanently delete ${images.length === 1 ? "this unused image" : images.length + " unused images"} (${total})? This cannot be undone.`)) return;
     setBusy(true); setError(""); setNotice("");
     try {
-      const { deleted } = await request({ method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: usage.unused.map((image) => image.id) }) });
-      setNotice(deleted.length + " images removed." + (deleted.length < usage.unused.length ? " Images that came into use meanwhile were kept." : ""));
+      const { deleted } = await request({ method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: images.map((image) => image.id) }) });
+      setNotice((deleted.length === 1 ? "1 image" : deleted.length + " images") + " removed." + (deleted.length < images.length ? " Images that came into use meanwhile were kept." : ""));
     } catch (error) { setError(error instanceof Error ? error.message : "Unable to remove images."); }
     await load();
   }
@@ -61,9 +61,13 @@ export function ServerPanel() {
         <p className="admin-server-hint">Uploaded more than a day ago and not used by any content section or blog post, including drafts. Replaced images stay stored until removed here.</p>
         {usage.unused.length ? <>
           <ul className="admin-server-images">
-            {usage.unused.map((image) => <li key={image.id}><FallbackImage src={"/media/" + image.id} alt="Unused uploaded image" className="admin-image-preview" /><small>{size(image.bytes)} · {image.created_at.slice(0, 10)}</small></li>)}
+            {usage.unused.map((image) => <li key={image.id}>
+              <FallbackImage src={"/media/" + image.id} alt="Unused uploaded image" className="admin-image-preview" />
+              <small>{size(image.bytes)} · {image.created_at.slice(0, 10)}</small>
+              <button className="admin-secondary admin-server-remove-one" type="button" disabled={busy} onClick={() => removeImages([image])} aria-label={`Remove unused image from ${image.created_at.slice(0, 10)} (${size(image.bytes)})`}>Remove</button>
+            </li>)}
           </ul>
-          <button className="admin-primary admin-server-remove" type="button" disabled={busy} onClick={removeUnused}>Remove {usage.unused.length} unused images ({size(unusedBytes)})</button>
+          <button className="admin-primary admin-server-remove" type="button" disabled={busy} onClick={() => removeImages(usage.unused)}>Remove all {usage.unused.length} unused images ({size(unusedBytes)})</button>
         </> : <p>No unused images.</p>}
       </>}
     </>

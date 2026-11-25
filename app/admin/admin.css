@@ -34,6 +34,7 @@
 .admin-server-images .admin-image-preview { max-width: none; }
 .admin-server-images small { color: #6b7881; }
 .admin-primary.admin-server-remove { margin-top: 1rem; border-color: #a13939; background: #a13939; }
+.admin-secondary.admin-server-remove-one { align-self: flex-start; padding: .35rem .7rem; border-color: #a13939; color: #a13939; font-size: .82rem; }
 .admin-main { min-width: 0; padding: 2rem; }
 .admin-formatting-hint { margin: 0 0 1.5rem; color: #526c7a; font-size: .85rem; }
 .admin-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
