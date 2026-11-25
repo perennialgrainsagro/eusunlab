@@ -35,14 +35,17 @@ export default async function NewsItemPage({ params }: Context) {
         </section>
       ) : null}
 
-      <section className="page__section page__section--last">
+      <section className="page__section">
         {item.details ? <div className="prose prose--narrow">{renderBlogDocument(item.details)}</div> : null}
         {item.link_url ? (
           <div className="read-more">
             <a href={item.link_url} target="_blank" rel="noopener noreferrer">{formatText(item.link_label || "Learn more", false)} →</a>
           </div>
         ) : null}
-        <Link className="link-caps" href={newsHref}>← All news</Link>
+      </section>
+
+      <section className="page__section page__section--last">
+        <Link className="btn-line" href={newsHref}>← All news</Link>
       </section>
     </SubPage>
   );

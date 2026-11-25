@@ -197,7 +197,7 @@ export function ContentEditor({ record, onSaved, onDirty }: {
       <div className="admin-section-heading"><div><h1>{contentTabs[record.tab].label}</h1><p>{dirty ? "Unsaved changes" : "Edit content, then save to update the website."}</p></div><div className="admin-section-actions">{managedField ? <button className="admin-secondary" type="button" disabled={busy} onClick={() => { setEditingOption(null); setOptionName(""); setOptionError(""); optionsDialog.current?.showModal(); }}>Manage {managedField === "group" ? "groups" : "categories"}</button> : null}<button className="admin-primary" type="submit" disabled={busy || !dirty}>{busy ? "Please wait…" : "Save changes"}</button></div></div>
       {record.tab === "Research" ? <p>The first three visible research items also appear as Home cards, ordered by Display order.</p> : null}
       {record.tab === "Projects" ? <p>Introduce each project with a summary, a Markdown description with images, and an optional video. Replace the example content with your actual projects.</p> : null}
-      {record.tab === "News" ? <p>Home shows the titles of the first three visible items; each opens a news page with the title, main image, and Markdown details. The News list shows the first sentences of Details as a summary. Items without a title are not shown.</p> : null}
+      {record.tab === "News" ? <p>Home shows the titles of the first three visible items; each opens a news page with the title, main image, and Markdown details. The News list shows titles only. Items without a title are not shown.</p> : null}
       {error ? <p className="admin-error" role="alert">{error}</p> : null}
       {notice ? <p className="admin-notice" role="status">{notice}</p> : null}
       {record.tab === "Settings" ? <>

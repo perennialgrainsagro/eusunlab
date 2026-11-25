@@ -127,22 +127,25 @@ body:has(.newlab) { background: #1d1915; }
 .newlab .hero__body { display: flex; flex-direction: column; gap: 40px; }
 .newlab .hero__main { max-width: 620px; }
 /* stacked: the bottom margin leaves room for the plant (roots.js) to grow below the feed instead of over it */
-.newlab .hero__feed { max-width: 720px; margin-bottom: 30vh; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 28px 36px; }
-@media (min-width: 1240px) {
+.newlab .hero__feed { max-width: 720px; margin-bottom: 30vh; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 28px; }
+/* end 200px from the edge: clear of the whole fixed depth meter (right: 28px, width: 160px), shown from 820px */
+@media (min-width: 820px) { .newlab .hero__feed { margin-right: calc(200px - var(--gutter)); } }
+/* side by side from the width where the feed still fits two columns there */
+@media (min-width: 1270px) {
   .newlab .hero__body { flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 48px; }
   .newlab .hero__main { flex: 0 1 540px; }
-  /* right margin keeps the feed clear of the depth meter labels (fixed, right: 28px) */
-  .newlab .hero__feed { flex: 1 1 0; min-width: 0; margin: 0 calc(140px - var(--gutter)) 0 0; }
+  .newlab .hero__feed { flex: 1 1 0; min-width: 0; margin-bottom: 0; }
 }
 .newlab .feed { display: flex; flex-direction: column; }
 .newlab .feed__head {
-  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
   padding-bottom: 10px; border-bottom: 1px solid rgba(31, 42, 28, .4);
   font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
 }
 .newlab .feed__title { margin: 0; font: inherit; font-weight: 700; color: var(--leaf); }
-.newlab .feed__head a { color: var(--leaf-ink); border-bottom-color: rgba(31, 42, 28, .4); }
-.newlab .feed__head a:hover { color: var(--leaf); border-bottom-color: var(--leaf); }
+/* More: outlined pill like the crop buttons, filled on hover */
+.newlab .feed__head a { padding: 5px 12px; border: 1px solid rgba(31, 42, 28, .45); border-radius: 999px; color: var(--leaf-ink); transition: background-color .2s, color .2s; }
+.newlab .feed__head a:hover { background: var(--leaf-ink); border-color: var(--leaf-ink); color: #eef0e8; }
 .newlab .feed__item { display: block; padding: 12px 0; color: var(--leaf-ink); border-bottom: 1px solid rgba(31, 42, 28, .15); }
 .newlab .feed__item:hover { color: var(--leaf); border-bottom-color: rgba(31, 42, 28, .15); }
 .newlab .feed__date { display: block; margin-bottom: 4px; font-family: var(--mono); font-size: 11px; color: #4a5640; }
@@ -303,6 +306,14 @@ body:has(.newlab) { background: #1d1915; }
   background: var(--gold); color: #1f1812;
 }
 .newlab .btn-gold:hover { background: var(--gold-hi); color: #1f1812; }
+/* outlined pill for page navigation (back to home, all posts/news) */
+.newlab .btn-line {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px;
+  border: 1px solid var(--gold-line); border-radius: 999px; color: var(--gold);
+  font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  transition: background-color .2s, border-color .2s, color .2s;
+}
+.newlab .btn-line:hover { background: rgba(230, 180, 90, .1); border-color: var(--gold-hi); color: var(--gold-hi); }
 .newlab .course { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line-strong); padding-top: 16px; }
 .newlab .course strong { font-weight: 500; font-size: 16px; }
 .newlab .course span { font-size: 14px; line-height: 1.5; color: var(--ink-muted); }

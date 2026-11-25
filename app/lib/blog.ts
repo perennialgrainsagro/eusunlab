@@ -1,5 +1,5 @@
 import { createElement, type ReactNode } from "react";
-import Markdown from "react-markdown";
+import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { contentUrl, markdownUrl } from "./content-schema.ts";
 import { plainText } from "./format-text.ts";
@@ -30,11 +30,20 @@ export function validatePost(value: unknown): BlogInput {
   return { title, writer_name: writer, slug, excerpt: input.excerpt.trim(), main_image_url: imageUrl.trim(), main_image_alt: imageAlt.trim(), body: input.body, published: input.published };
 }
 
+// Article links always open in a new tab; in-page #anchors (footnotes) and mailto: links (a new tab would stay blank) don't.
+const markdownComponents: Components = {
+  a: ({ node, ...props }) => {
+    void node; // react-markdown's syntax-tree node, not an <a> attribute
+    return createElement("a", /^(#|mailto:)/.test(props.href ?? "") ? props : { ...props, target: "_blank", rel: "noopener noreferrer" });
+  },
+};
+
 export function renderBlogDocument(markdown: string): ReactNode {
   return createElement(Markdown, {
     skipHtml: true,
     remarkPlugins: [remarkGfm],
     urlTransform: markdownUrl,
+    components: markdownComponents,
   }, markdown);
 }
 

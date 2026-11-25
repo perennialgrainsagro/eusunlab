@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { formatMonth, loadNews, loadSettings } from "../../lib/content.ts";
-import { bodySummary, formatText, plainText } from "../../lib/format-text.ts";
+import { formatText, plainText } from "../../lib/format-text.ts";
 import { projectPreview } from "../../lib/projects.ts";
 import { newsItemHref, Photo, SubPage } from "../components";
 
@@ -21,14 +21,12 @@ export default async function NewsPage() {
           <div className="post-list">
             {news.data.map((item) => {
               const preview = projectPreview({ ...item, preview_image_url: "", title: plainText(item.title) });
-              const summary = bodySummary(item.details);
               return (
                 <article className="post-item" key={item.slug}>
                   <div className="post-item__copy">
                     <span className="post-item__byline">{formatMonth(item.month)}</span>
                     <h2 className="post-item__title"><Link href={newsItemHref(item.slug)}>{formatText(item.title, false)}</Link></h2>
-                    {summary ? <p className="body-text">{formatText(summary)}</p> : null}
-                    <Link className="link-caps" href={newsItemHref(item.slug)}>Learn more →</Link>
+                    <Link className="link-caps" href={newsItemHref(item.slug)}>Read news →</Link>
                   </div>
                   {preview.src ? (
                     <Link className="post-item__thumb" href={newsItemHref(item.slug)} tabIndex={-1} aria-hidden="true">

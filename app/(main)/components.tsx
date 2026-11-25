@@ -59,7 +59,7 @@ export function SubPage({ section, back, children, settings }: { section: string
   return (
     <div className="page">
       <header className="page__bar">
-        <Link href={back}>← {settings.lab_name || "Eusun Han Lab"}</Link>
+        <Link className="btn-line" href={back}>← {settings.lab_name || "Eusun Han Lab"}</Link>
         <span>{section}</span>
       </header>
       <main>{children}</main>

@@ -33,13 +33,17 @@ test("single admin credentials and signed sessions reject tampering, expiry, and
 test("blog Markdown supports formatting and images while excluding HTML and unsafe URLs", () => {
   const post = validatePost({
     title: "Test article", writer_name: "Test writer", slug: "test-article", excerpt: "", published: false,
-    body: "**Bold**\n\n~~Removed~~\n\n![Lab image](/media/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa)\n\n<script>alert('x')</script>\n\n[Unsafe](javascript:alert(1))",
+    body: "**Bold**\n\n~~Removed~~\n\n![Lab image](/media/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa)\n\n<script>alert('x')</script>\n\n[Unsafe](javascript:alert(1))\n\n[Paper](https://example.com/paper) [Projects](/projects) [Top](#top) [Mail](mailto:lab@example.com)",
   });
   const html = renderToStaticMarkup(renderBlogDocument(post.body));
   assert.match(html, /<strong>Bold<\/strong>/);
   assert.match(html, /<del>Removed<\/del>/);
   assert.match(html, /src="\/media\/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"/);
   assert.doesNotMatch(html, /<script|javascript:/i);
+  assert.match(html, /<a href="https:\/\/example.com\/paper" target="_blank" rel="noopener noreferrer">Paper<\/a>/);
+  assert.match(html, /<a href="\/projects" target="_blank" rel="noopener noreferrer">Projects<\/a>/, "Body links always open in a new tab.");
+  assert.match(html, /<a href="#top">Top<\/a>/, "In-page anchors stay on the page.");
+  assert.match(html, /<a href="mailto:lab@example.com">Mail<\/a>/);
   assert.equal(makeSlug("한글 Blog Title"), "한글-blog-title");
   assert.equal(makeSlug("**한글** [Blog Title](https://example.com)"), "한글-blog-title");
   assert.throws(() => validatePost({ ...post, slug: "../admin" }));

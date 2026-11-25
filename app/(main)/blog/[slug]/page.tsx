@@ -37,9 +37,12 @@ export default async function NewBlogPostPage({ params }: Context) {
         </section>
       ) : null}
 
-      <section className="page__section page__section--last">
+      <section className="page__section">
         <div className="prose prose--narrow">{renderBlogDocument(post.body)}</div>
-        <Link className="link-caps" href={blogHref}>← All posts</Link>
+      </section>
+
+      <section className="page__section page__section--last">
+        <Link className="btn-line" href={blogHref}>← All posts</Link>
       </section>
     </SubPage>
   );
