@@ -35,8 +35,7 @@ export const sampleNews: NewsItem[] = [
   {
     month: "Date(2026,8,1)",
     slug: "sample-news-the-new-lab-website-is-ready-for-content",
-    title: "",
-    content: "Sample news: the new lab website is ready for content.",
+    title: "Sample news: the new lab website is ready for content.",
     image_url: "",
     image_alt: "",
     details: "",
@@ -46,8 +45,7 @@ export const sampleNews: NewsItem[] = [
   {
     month: "Date(2026,5,1)",
     slug: "sample-news-add-a-new-member-announcement-in-the-news-sheet",
-    title: "",
-    content: "Sample news: add a new member announcement in the News sheet.",
+    title: "Sample news: add a new member announcement in the News sheet.",
     image_url: "",
     image_alt: "",
     details: "",
@@ -57,8 +55,7 @@ export const sampleNews: NewsItem[] = [
   {
     month: "Date(2026,2,1)",
     slug: "sample-news-link-a-paper-award-or-event-from-this-row",
-    title: "",
-    content: "Sample news: link a paper, award, or event from this row.",
+    title: "Sample news: link a paper, award, or event from this row.",
     image_url: "",
     image_alt: "",
     details: "",

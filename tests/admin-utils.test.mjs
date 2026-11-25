@@ -56,7 +56,7 @@ test("content validation keeps hidden rows and rejects malformed content and uns
   const rows = validateRows("Research", [{ title: "Card", visible: false, image_url: "/media/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" }]);
   assert.equal(rows[0].visible, false);
   assert.throws(() => validateRows("Research", [{ title: "Card", image_url: "javascript:alert(1)" }]));
-  assert.throws(() => validateRows("News", [{ content: { html: "bad" } }]));
+  assert.throws(() => validateRows("News", [{ title: { html: "bad" } }]));
   assert.throws(() => validateRows("Research", [{ display_order: "not a number" }]));
   assert.equal(imageType(Buffer.from("<svg onload='alert(1)'>")), null);
   assert.equal(imageType(Buffer.from("89504e470d0a1a0a", "hex")), "image/png");
@@ -143,7 +143,7 @@ test("reordering updates public display order without losing content, hidden row
   assert.equal(research[2].visible, false);
   assert.equal(rows[0].display_order, 8, "Leave the saved source untouched until the user saves.");
   assert.deepEqual(normalizeResearch(research).map((row) => row.title), ["Second", "First"]);
-  assert.deepEqual(normalizeNews(validateRows("News", reorderRows("News", rows, 1, 0))).map((row) => row.content), ["Second", "First"], "Manual news order overrides the date.");
+  assert.deepEqual(normalizeNews(validateRows("News", reorderRows("News", rows, 1, 0))).map((row) => row.title), ["Second", "First"], "Manual news order overrides the date.");
   assert.deepEqual(normalizeProfessorPublications(reorderRows("ProfessorPublications", rows, 1, 0)).map((row) => row.content), ["Second", "First"]);
   assert.deepEqual(normalizePublications(reorderRows("Publications", rows, 1, 0)).map((row) => row.title), ["Second", "First"]);
   assert.deepEqual(normalizeStudents(reorderRows("Students", rows, 1, 0)).map((row) => row.name), ["Second", "First"]);

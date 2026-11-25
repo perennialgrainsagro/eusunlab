@@ -87,9 +87,10 @@ test("robots and sitemap use the current site address and exclude legacy pages",
     const xml = await sitemap.text();
     assert.match(xml, /xmlns="http:\/\/www.sitemaps.org\/schemas\/sitemap\/0.9"/);
     const urls = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => match[1]);
-    const pageUrls = ["/", "/people/professor", "/publications", "/blog"].map((path) => new URL(path, origin).href);
+    const pageUrls = ["/", "/people/professor", "/publications", "/blog", "/news"].map((path) => new URL(path, origin).href);
     const projectUrls = ["root-phenotyping-for-resilient-crops", "image-based-plant-growth-monitoring"].map((slug) => new URL(`/projects/${slug}`, origin).href);
-    assert.deepEqual(urls, [...pageUrls, ...projectUrls]);
+    const newsUrls = ["the-new-lab-website-is-ready-for-content", "add-a-new-member-announcement-in-the-news-sheet", "link-a-paper-award-or-event-from-this-row"].map((slug) => new URL(`/news/sample-news-${slug}`, origin).href);
+    assert.deepEqual(urls, [...pageUrls, ...projectUrls, ...newsUrls]);
     assert.doesNotMatch(xml, /\/legacy_page|\/admin|\/api\//);
   }
 });
@@ -148,18 +149,20 @@ test("the old newpage address redirects to the root and preserves query paramete
 });
 
 test("new design detail pages return to sections on the root home page", async () => {
-  for (const [path, section] of [
-    ["/people/professor", "people"],
-    ["/publications", "publications"],
-    ["/blog", "blog"],
-    ["/projects/root-phenotyping-for-resilient-crops", "projects"],
-    ["/projects/image-based-plant-growth-monitoring", "projects"],
+  // News and Blog lists sit at the top of the home page, so their pages link back to "/".
+  for (const [path, back] of [
+    ["/people/professor", "/#people"],
+    ["/publications", "/#publications"],
+    ["/blog", "/"],
+    ["/news", "/"],
+    ["/projects/root-phenotyping-for-resilient-crops", "/#projects"],
+    ["/projects/image-based-plant-growth-monitoring", "/#projects"],
   ]) {
     const response = await fetch(baseUrl + path);
     assert.equal(response.status, 200);
     const html = await response.text();
     assert.match(html, /class="newlab /);
-    assert.ok(html.includes(`href="/#${section}"`));
+    assert.ok(html.includes(`href="${back}"`));
     assert.doesNotMatch(html, /<a\b[^>]*href="\/(?:newpage|legacy_page)/);
     assert.doesNotMatch(html, /class="site-frame"/);
   }

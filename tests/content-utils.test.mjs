@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { bodySummary, firstSentence, formatText, plainText } from "../app/lib/format-text.ts";
+import { bodySummary, firstSentence, formatText, plainText, upgradeNewsRow } from "../app/lib/format-text.ts";
 import {
   formatMonth,
   isVisible,
@@ -11,7 +11,6 @@ import {
   loadResearch,
   loadProfessorPublications,
   loadPublications,
-  newsHeading,
   normalizeNews,
   normalizeProfessorPublications,
   normalizePublications,
@@ -140,23 +139,31 @@ test("loads shared Research and Home card content with ordering, visibility, and
 
 test("formats Google date values and sorts visible news newest first", () => {
   const news = normalizeNews([
-    { month: "Date(2025,0,1)", content: "Older", visible: true },
-    { month: "Date(2026,8,1)", content: "Newest", visible: "" },
-    { month: "Date(2027,0,1)", content: "Hidden", visible: false },
+    { month: "Date(2025,0,1)", title: "Older", visible: true },
+    { month: "Date(2026,8,1)", title: "Newest", visible: "" },
+    { month: "Date(2027,0,1)", title: "Hidden", visible: false },
   ]);
   assert.equal(formatMonth(news[0].month), "Sep 2026");
-  assert.deepEqual(news.map((item) => item.content), ["Newest", "Older"]);
+  assert.deepEqual(news.map((item) => item.title), ["Newest", "Older"]);
 });
 
-test("gives each news item a unique page slug from its title or first sentence", () => {
+test("gives each news item a unique page slug from its title and hides untitled items", () => {
   const news = normalizeNews([
-    { content: "**Lab** opens! More soon.", visible: true },
-    { title: "Lab opens", content: "Same heading.", visible: true },
-    { title: "Award", content: "Prize.", details: "![x](/media/00000000-0000-0000-0000-000000000000)", image_url: "javascript:alert(1)", visible: true },
+    { title: "**Lab** opens!", visible: true },
+    { title: "Lab opens", details: "Same heading.", visible: true },
+    { title: "Award", details: "![x](/media/00000000-0000-0000-0000-000000000000)", image_url: "javascript:alert(1)", visible: true },
+    { details: "No title yet.", visible: true },
   ]);
   assert.deepEqual(news.map((item) => item.slug), ["lab-opens", "lab-opens-2", "award"]);
-  assert.equal(newsHeading(news[0].title, news[0].content), "**Lab** opens!");
   assert.equal(news[2].image_url, "", "Unsafe image URLs are dropped.");
+});
+
+test("moves old News content into title and details, keeping its page address", () => {
+  assert.deepEqual(upgradeNewsRow({ content: "**Lab** opens! More soon.", visible: true }), { visible: true, title: "**Lab** opens!", details: "**Lab** opens! More soon." });
+  assert.deepEqual(upgradeNewsRow({ title: "Award", content: "Prize.", details: "Photos below." }), { title: "Award", details: "Prize.\n\nPhotos below." });
+  assert.deepEqual(upgradeNewsRow({ content: "One sentence." }), { title: "One sentence.", details: "" }, "Do not repeat a one-sentence content as the body.");
+  assert.deepEqual(upgradeNewsRow({ title: "New", details: "Body" }), { title: "New", details: "Body" });
+  assert.equal(normalizeNews([{ content: "**Lab** opens! More soon.", visible: true }])[0].slug, "lab-opens");
 });
 
 test("orders members and rejects unsafe links", () => {

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { renderBlogDocument } from "../../../lib/blog.ts";
-import { formatMonth, loadNews, loadSettings, newsHeading } from "../../../lib/content.ts";
-import { formatText, plainText } from "../../../lib/format-text.ts";
+import { formatMonth, loadNews, loadSettings } from "../../../lib/content.ts";
+import { bodySummary, formatText, plainText } from "../../../lib/format-text.ts";
 import { newsHref, Photo, SubPage } from "../../components";
 
 type Context = { params: Promise<{ slug: string }> };
@@ -13,26 +13,23 @@ async function findNews(slug: string) {
 
 export async function generateMetadata({ params }: Context) {
   const item = await findNews((await params).slug);
-  return { title: plainText(item ? newsHeading(item.title, item.content) : "News"), description: item ? plainText(item.content) : undefined };
+  return { title: plainText(item ? item.title : "News"), description: item ? plainText(bodySummary(item.details)) || undefined : undefined };
 }
 
 export default async function NewsItemPage({ params }: Context) {
   const [settings, item] = await Promise.all([loadSettings(), findNews((await params).slug)]);
   if (!item) notFound();
-  const heading = newsHeading(item.title, item.content);
-
   return (
     <SubPage settings={settings.data} back="/" section="News">
       <section className="page__section page__section--intro">
         <span className="page__kicker">{formatMonth(item.month)}</span>
-        <h1 className="page__title post__title">{formatText(heading, false)}</h1>
-        {item.content !== heading ? <p className="page__subtitle">{formatText(item.content)}</p> : null}
+        <h1 className="page__title post__title">{formatText(item.title, false)}</h1>
       </section>
 
       {item.image_url ? (
         <section className="page__section">
           <figure>
-            <Photo className="figure-full" src={item.image_url} alt={plainText(item.image_alt || heading)} />
+            <Photo className="figure-full" src={item.image_url} alt={plainText(item.image_alt || item.title)} />
             {item.image_alt ? <figcaption>{formatText(item.image_alt, false)}</figcaption> : null}
           </figure>
         </section>

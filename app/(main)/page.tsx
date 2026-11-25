@@ -9,7 +9,6 @@ import {
   loadResearch,
   loadSettings,
   loadStudents,
-  newsHeading,
 } from "../lib/content.ts";
 import { listPosts } from "../lib/database.ts";
 import { formatText, plainText } from "../lib/format-text.ts";
@@ -54,7 +53,7 @@ export default async function NewHomePage() {
   ].filter((photo) => photo.src);
   // Latest News + Blog shown on the first screen.
   const feeds = [
-    { id: "news", title: "News", href: newsHref, empty: "No news yet.", items: news.data.slice(0, RECENT).map((item) => ({ key: item.slug, href: newsItemHref(item.slug), date: formatMonth(item.month), title: newsHeading(item.title, item.content) })) },
+    { id: "news", title: "News", href: newsHref, empty: "No news yet.", items: news.data.slice(0, RECENT).map((item) => ({ key: item.slug, href: newsItemHref(item.slug), date: formatMonth(item.month), title: item.title })) },
     { id: "blog", title: "Blog", href: blogHref, empty: "No blog posts yet.", items: posts.map((post) => ({ key: post.id, href: postHref(post.slug), date: postDate(post.published_at, "medium"), title: post.title })) },
   ];
 

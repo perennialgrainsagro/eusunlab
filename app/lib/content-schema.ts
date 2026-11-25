@@ -47,7 +47,7 @@ export function addDefaultSettings(rows: SheetRow[]): SheetRow[] {
 
 export const contentTabs = {
   Settings: { label: "Site settings", fields: ["key", "value"] },
-  News: { label: "News", fields: ["month", "title", "content", "image_url", "image_alt", "details", "link_label", "link_url", "visible", "display_order"] },
+  News: { label: "News", fields: ["month", "title", "image_url", "image_alt", "details", "link_label", "link_url", "visible", "display_order"] },
   Professor: { label: "Professor", fields: ["name", "secondary_name", "photo_url", "title", "affiliation", "email", "personal_url", "cv_url", "scholar_url", "bio", "visible"] },
   ProfessorDetails: { label: "Professor details", fields: ["section", "display_order", "content", "subtext", "link_label", "link_url", "visible"] },
   ProfessorPublications: { label: "Professor publications", fields: ["category", "order", "content", "visible"] },

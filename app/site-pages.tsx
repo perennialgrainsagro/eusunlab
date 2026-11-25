@@ -126,7 +126,7 @@ export async function HomePage() {
                   <article className="news-item" key={`${item.month}-${index}`}>
                     <time className="news-date">{formatMonth(item.month)}</time>
                     <div className="news-content">
-                      <p>{formatText(item.content)}</p>
+                      <p>{formatText(item.title)}</p>
                       <ExternalLink href={item.link_url} className="text-link">
                         {formatText(item.link_label || "Learn more")} →
                       </ExternalLink>

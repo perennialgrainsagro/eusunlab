@@ -87,7 +87,7 @@ test("Neon admin login, content edits, image upload, and blog publishing work en
     assert.match(dashboard, /Professor publications/);
     originalContent = await (await request("/api/admin/content/News")).json();
     const marker = "Temporary integration test " + id;
-    const editedRows = [...originalContent.rows, { month: "2026-10-05", content: marker, link_label: "", link_url: "", visible: true }];
+    const editedRows = [...originalContent.rows, { month: "2026-10-05", title: marker, link_label: "", link_url: "", visible: true }];
     assert.equal((await request("/api/admin/content/News", "PUT", { rows: editedRows, updated_at: originalContent.updated_at }, "https://untrusted.example")).status, 403);
     const save = await request("/api/admin/content/News", "PUT", { rows: editedRows, updated_at: originalContent.updated_at });
     assert.equal(save.status, 200);

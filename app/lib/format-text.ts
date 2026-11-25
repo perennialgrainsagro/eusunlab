@@ -1,5 +1,6 @@
 import { createElement, type ReactNode } from "react";
 import { contentUrl } from "./content-schema.ts";
+import type { SheetRow } from "./types.ts";
 
 // shortcut: inline bold and links only; use a Markdown parser if more syntax is needed.
 const inlinePattern = /\*\*([^*\r\n]+)\*\*|\[([^\]\r\n]+)\]\(((?:[^()\s]|\([^()\s]*\))+)\)/g;
@@ -50,6 +51,16 @@ export function bodySummary(markdown: string): string {
     .replace(/\s+/g, " "), 2);
   // An unpunctuated body is one long "sentence"; keep the list readable.
   return plainText(text).length > 300 ? truncateInlineText(text, 300).trimEnd() + "…" : text;
+}
+
+// News text used to live in a Content field; it now goes in Details, headed by Title. Old rows are read this way
+// (same heading, so the same page address) and the dashboard's next save stores them in the new shape.
+export function upgradeNewsRow({ content, ...row }: SheetRow): SheetRow {
+  const text = String(content ?? "").trim();
+  if (!text) return row;
+  const title = String(row.title ?? "").trim() || firstSentence(text);
+  const details = [text === title ? "" : text, String(row.details ?? "").trim()].filter(Boolean).join("\n\n");
+  return { ...row, title, details };
 }
 
 function truncateInlineText(text: string, length: number): string {
