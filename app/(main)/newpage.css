@@ -25,6 +25,7 @@
 
   --gutter: clamp(20px, 7vw, 120px);
   --page-gutter: clamp(20px, 5vw, 48px);
+  --photo-w: 140px; /* People: PI and member photos share one width */
 }
 
 body:has(.newlab) { background: #1d1915; }
@@ -203,7 +204,6 @@ body:has(.newlab) { background: #1d1915; }
   border: 1px solid var(--line-soft);
   display: flex; flex-direction: column; gap: var(--panel-gap, 20px);
 }
-.newlab .panel--wide { max-width: 720px; }
 .newlab .panel__title {
   font-family: var(--serif); font-weight: 400; font-size: clamp(40px, 5vw, 64px);
   line-height: 1; margin: 0; letter-spacing: -.01em;
@@ -262,8 +262,8 @@ body:has(.newlab) { background: #1d1915; }
 
 /* ---------- people ---------- */
 
-.newlab .pi { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 22px; align-items: start; }
-.newlab .pi__photo { width: 160px; aspect-ratio: 2 / 3; object-fit: cover; object-position: 50% 30%; display: block; }
+.newlab .pi { display: grid; grid-template-columns: var(--photo-w) minmax(0, 1fr); gap: 22px; align-items: start; }
+.newlab .pi__photo { width: var(--photo-w); aspect-ratio: 2 / 3; object-fit: cover; object-position: 50% 30%; display: block; }
 .newlab .photo-frame { overflow: hidden; }
 .newlab .photo-frame img { transition: transform .3s; }
 .newlab .photo-frame img:hover { transform: scale(1.08); }
@@ -276,11 +276,11 @@ body:has(.newlab) { background: #1d1915; }
 @media (max-width: 480px) { .newlab .pi { grid-template-columns: minmax(0, 1fr); } }
 
 .newlab .team {
-  display: grid; grid-template-columns: repeat(auto-fit, 140px); justify-content: center; gap: 24px 18px;
+  display: grid; grid-template-columns: repeat(auto-fit, var(--photo-w)); justify-content: start; gap: 24px 18px;
   border-top: 1px solid var(--line-strong); padding-top: 24px;
 }
 .newlab .member { display: flex; flex-direction: column; gap: 6px; }
-.newlab .member__photo { width: 140px; aspect-ratio: 2 / 3; object-fit: cover; display: block; }
+.newlab .member__photo { width: var(--photo-w); aspect-ratio: 2 / 3; object-fit: cover; display: block; }
 .newlab .member__name { font-weight: 500; font-size: 15px; margin-top: 4px; }
 .newlab .member__role { font-size: 13px; color: var(--gold); }
 .newlab .member__focus { font-size: 13px; line-height: 1.45; color: var(--ink-muted); }

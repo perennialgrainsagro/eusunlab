@@ -212,7 +212,7 @@ export default async function NewHomePage() {
 
         <section className="layer" data-layer={layerOf("people")} id="people" aria-labelledby="people-title">
           <LayerLabel index={layerOf("people")} />
-          <div className="panel panel--wide" style={{ "--panel-gap": "30px" } as React.CSSProperties}>
+          <div className="panel" style={{ "--panel-gap": "30px" } as React.CSSProperties}>
             <h2 className="panel__title" id="people-title">People</h2>
             <div className="pi">
               <div className="photo-frame"><Photo className="pi__photo" src={pi.photo_url} alt={plainText(pi.name)} /></div>
