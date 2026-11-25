@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { firstSentence, formatText, plainText } from "../app/lib/format-text.ts";
+import { bodySummary, firstSentence, formatText, plainText } from "../app/lib/format-text.ts";
 import {
   formatMonth,
   isVisible,
@@ -11,6 +11,7 @@ import {
   loadResearch,
   loadProfessorPublications,
   loadPublications,
+  newsHeading,
   normalizeNews,
   normalizeProfessorPublications,
   normalizePublications,
@@ -63,6 +64,13 @@ test("Home summaries stop after the first visible sentence and retain complete b
     ["**Read [the lab](https://example.com). More details.**", "**Read [the lab](https://example.com).**"],
   ]) assert.equal(firstSentence(text), expected);
   assert.equal(renderToStaticMarkup(createElement("p", null, formatText(firstSentence("**First sentence. Second sentence.**")))), "<p><strong>First sentence.</strong></p>");
+});
+
+test("summarizes a blog body as its first two sentences", () => {
+  assert.equal(bodySummary("# Intro\n\n![photo](/media/1)\n\nFirst *one*. Second with [a link](https://example.com).\n\n- Third."), "First one. Second with [a link](https://example.com).");
+  assert.equal(bodySummary("첫 문장입니다.\n두 번째 문장입니다. 세 번째."), "첫 문장입니다. 두 번째 문장입니다.");
+  assert.equal(bodySummary(""), "");
+  assert.equal(bodySummary("word ".repeat(100)), "word ".repeat(60).trimEnd() + "…");
 });
 
 test("renders inline links and bold safely, including the supplied publication citation", () => {
@@ -138,6 +146,17 @@ test("formats Google date values and sorts visible news newest first", () => {
   ]);
   assert.equal(formatMonth(news[0].month), "Sep 2026");
   assert.deepEqual(news.map((item) => item.content), ["Newest", "Older"]);
+});
+
+test("gives each news item a unique page slug from its title or first sentence", () => {
+  const news = normalizeNews([
+    { content: "**Lab** opens! More soon.", visible: true },
+    { title: "Lab opens", content: "Same heading.", visible: true },
+    { title: "Award", content: "Prize.", details: "![x](/media/00000000-0000-0000-0000-000000000000)", image_url: "javascript:alert(1)", visible: true },
+  ]);
+  assert.deepEqual(news.map((item) => item.slug), ["lab-opens", "lab-opens-2", "award"]);
+  assert.equal(newsHeading(news[0].title, news[0].content), "**Lab** opens!");
+  assert.equal(news[2].image_url, "", "Unsafe image URLs are dropped.");
 });
 
 test("orders members and rejects unsafe links", () => {

@@ -9,6 +9,8 @@ export const professorHref = "/people/professor";
 export const projectHref = (slug: string) => `/projects/${slug}`;
 export const blogHref = "/blog";
 export const postHref = (slug: string) => `${blogHref}/${encodeURIComponent(slug)}`;
+export const newsHref = "/news";
+export const newsItemHref = (slug: string) => `${newsHref}/${encodeURIComponent(slug)}`;
 
 export function postDate(value: string | null, style: "medium" | "long" = "long") {
   return value ? new Intl.DateTimeFormat("en-GB", { dateStyle: style, timeZone: "UTC" }).format(new Date(value)) : "";

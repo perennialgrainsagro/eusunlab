@@ -50,6 +50,7 @@ export function ContentEditor({ record, onSaved, onDirty }: {
   const dragged = useRef<SortTarget | null>(null);
   const [dropTarget, setDropTarget] = useState<SortTarget | null>(null);
   const sortable = record.tab !== "Settings" && record.tab !== "Professor";
+  const markdownDetails = record.tab === "Projects" || record.tab === "News";
   function markDirty() {
     setDirty(true); onDirty(true); setNotice(""); setError("");
   }
@@ -133,9 +134,9 @@ export function ContentEditor({ record, onSaved, onDirty }: {
   }
   async function attach(file: File | undefined, index: number, field: string) {
     if (!file) return;
-    const contentImage = record.tab === "Projects" && field === "details";
+    const contentImage = markdownDetails && field === "details";
     const text = String(rows[index].details || "");
-    const textarea = detailsTextarea.current?.isConnected && detailsTextarea.current.id === `Projects-${index}-details` ? detailsTextarea.current : null;
+    const textarea = detailsTextarea.current?.isConnected && detailsTextarea.current.id === `${record.tab}-${index}-details` ? detailsTextarea.current : null;
     const position = textarea?.selectionEnd ?? text.length;
     setBusy(true); setError("");
     try {
@@ -159,7 +160,7 @@ export function ContentEditor({ record, onSaved, onDirty }: {
     const id = record.tab + "-" + index + "-" + name;
     const image = settingKey.endsWith("image_url") || settingKey === "photo_url";
     const previewImage = record.tab === "Projects" && name === "preview_image_url";
-    const projectDetails = record.tab === "Projects" && name === "details";
+    const projectDetails = markdownDetails && name === "details";
     return (
       <div className={"admin-field " + (kind === "checkbox" ? "admin-checkbox" : "")} key={id} data-color-mode="light">
         <label htmlFor={id}>{label}</label>
@@ -174,7 +175,7 @@ export function ContentEditor({ record, onSaved, onDirty }: {
         {previewImage ? <p id={id + "-hint"}>Optional. Used in the Projects list. If empty, the cover or first image in Details is used. With no images, the list shows Preview coming soon.</p> : null}
         {name === "short_bio" ? <p id={id + "-hint"}>Optional. Shown in the Members list. Put each paragraph on a new line; use **text** for bold and [text](url) for links.</p> : null}
         {projectDetails ? <div className="admin-image-field">
-          <p>Place the cursor in Details, then use the image toolbar button or upload below to insert an image there. The preview shows the uploaded image. Save changes to keep it in the project.</p>
+          <p>Place the cursor in Details, then use the image toolbar button or upload below to insert an image there. The preview shows the uploaded image. Save changes to keep it.</p>
           <label htmlFor={id + "-file"} className="admin-upload-label">Insert content image <span>(JPEG, PNG, WebP or GIF · up to 3 MB)</span></label>
           <input ref={contentImageInput} id={id + "-file"} type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={busy} onChange={(event) => { void attach(event.target.files?.[0], index, name); event.target.value = ""; }} />
         </div> : null}
@@ -196,6 +197,7 @@ export function ContentEditor({ record, onSaved, onDirty }: {
       <div className="admin-section-heading"><div><h1>{contentTabs[record.tab].label}</h1><p>{dirty ? "Unsaved changes" : "Edit content, then save to update the website."}</p></div><div className="admin-section-actions">{managedField ? <button className="admin-secondary" type="button" disabled={busy} onClick={() => { setEditingOption(null); setOptionName(""); setOptionError(""); optionsDialog.current?.showModal(); }}>Manage {managedField === "group" ? "groups" : "categories"}</button> : null}<button className="admin-primary" type="submit" disabled={busy || !dirty}>{busy ? "Please wait…" : "Save changes"}</button></div></div>
       {record.tab === "Research" ? <p>The first three visible research items also appear as Home cards, ordered by Display order.</p> : null}
       {record.tab === "Projects" ? <p>Introduce each project with a summary, a Markdown description with images, and an optional video. Replace the example content with your actual projects.</p> : null}
+      {record.tab === "News" ? <p>Home shows the first three visible items; each Learn more opens a news page with the title, main image, and Markdown details. Content is the short text shown in lists. Title is optional; without it, the first sentence of Content is used.</p> : null}
       {error ? <p className="admin-error" role="alert">{error}</p> : null}
       {notice ? <p className="admin-notice" role="status">{notice}</p> : null}
       {record.tab === "Settings" ? <>

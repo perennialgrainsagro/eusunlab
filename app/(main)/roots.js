@@ -42,6 +42,8 @@ export function startRoots(root) {
     const secs = [...root.querySelectorAll('[data-layer]')];
     const gy = secs[0] ? secs[0].offsetHeight + 3 : 600;
     const narrow = W < 820;
+    // Plant and roots drawn at this fraction of their original size, so the plant stays below the hero's News/Blog feed.
+    const size = narrow ? 0.5 : 0.45;
     const ox = narrow ? W * 0.72 : W * 0.66;
     const anchors = secs.map((el, i) => ({ y: i === 0 ? 0 : el.getBoundingClientRect().top - rr.top }));
     // Roots stop inside the second-to-last layer (Join us), above the last one (Contact).
@@ -65,7 +67,7 @@ export function startRoots(root) {
       const n = Math.floor(len / step);
       let next = o < 2 ? latEvery[o] * (0.4 + R()) : Infinity;
       for (let i = 0; i < n; i++) {
-        ang += (R() - 0.5) * (o === 0 ? 0.22 : 0.38) + (Math.PI / 2 - ang) * g[o];
+        ang += (R() - 0.5) * (o === 0 ? 0.22 : 0.38) + (Math.PI / 2 - ang) * g[o] / size;
         let nx = x + Math.cos(ang) * step, ny = y + Math.sin(ang) * step;
         if (nx < 8 || nx > W - 8) { ang = Math.PI - ang; nx = x + Math.cos(ang) * step; }
         if (ny > maxY || ny < gy + 2) break;
@@ -73,7 +75,7 @@ export function startRoots(root) {
         add(x, y, nx, ny, ww, o); x = nx; y = ny;
         if (--next <= 0 && o < 2) {
           const side = R() < 0.5 ? -1 : 1, rem = 1 - i / n;
-          const l = latLen[o] * (0.35 + R()) * (0.45 + rem * 0.8);
+          const l = latLen[o] * size * (0.35 + R()) * (0.45 + rem * 0.8);
           grow(x, y, ang + side * (0.9 + R() * 0.6), l, ww * (o === 0 ? 0.42 : 0.6), o + 1, g, latEvery, latLen);
           next = latEvery[o] * (0.5 + R());
         }
@@ -84,11 +86,11 @@ export function startRoots(root) {
       const N = 10;
       for (let k = 0; k < N; k++) {
         const a = Math.PI / 2 + (k / (N - 1) - 0.5) * 2.4 + (R() - 0.5) * 0.3;
-        grow(ox + (R() - 0.5) * 24, gy + 2, a, depth * (0.35 + R() * 0.85), 2.8 + R(), 0, [0.018, 0.006, 0.002], [24, 6], [260, 50]);
+        grow(ox + (R() - 0.5) * 24, gy + 2, a, depth * (0.35 + R() * 0.85), (2.8 + R()) * size, 0, [0.018, 0.006, 0.002], [24, 6], [260, 50]);
       }
     } else {
-      grow(ox, gy + 2, Math.PI / 2, depth * 1.1, 11, 0, [0.09, 0.008, 0.003], [18, 6], [340, 60]);
-      for (let k = 0; k < 3; k++) grow(ox + (R() - 0.5) * 10, gy + 6, Math.PI / 2 + (R() - 0.5) * 2, 160 + R() * 200, 2.2, 1, [0.09, 0.01, 0.003], [18, 6], [340, 60]);
+      grow(ox, gy + 2, Math.PI / 2, depth * 1.1, 11 * size, 0, [0.09, 0.008, 0.003], [18, 6], [340, 60]);
+      for (let k = 0; k < 3; k++) grow(ox + (R() - 0.5) * 10, gy + 6, Math.PI / 2 + (R() - 0.5) * 2, (160 + R() * 200) * size, 2.2 * size, 1, [0.09, 0.01, 0.003], [18, 6], [340, 60]);
     }
     Object.assign(G, { segs, bins, BIN });
 
@@ -100,7 +102,8 @@ export function startRoots(root) {
     G.parts = parts;
 
     // --- above-ground plant ---
-    const B = rng(S.crop === 'grass' ? 11 : 23), sc = narrow ? 0.7 : 1, hh = gy * sc;
+    // Height capped to the viewport so a taller (stacked) hero doesn't grow the plant into the feed.
+    const B = rng(S.crop === 'grass' ? 11 : 23), sc = size * (narrow ? 0.7 : 1), hh = Math.min(gy, window.innerHeight) * sc;
     if (S.crop === 'grass') {
       G.blades = [];
       for (let i = 0; i < 26; i++) G.blades.push({ bx: ox + (B() - 0.5) * 30, h: hh * (0.2 + B() * 0.3), lean: (B() - 0.5) * 1.3, curl: (B() - 0.5) * 1.2, w: 2.5 + B() * 2.5, ph: B() * 6, c: B() });

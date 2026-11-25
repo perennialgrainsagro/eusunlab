@@ -30,8 +30,13 @@ export type Settings = {
 } & Record<keyof typeof methodsDefaults, string>;
 
 export type NewsItem = {
+  slug: string;
   month: string;
+  title: string;
   content: string;
+  image_url: string;
+  image_alt: string;
+  details: string;
   link_label: string;
   link_url: string;
 };

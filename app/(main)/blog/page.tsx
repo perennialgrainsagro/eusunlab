@@ -11,7 +11,7 @@ export default async function NewBlogPage() {
   const [settings, posts] = await Promise.all([loadSettings(), listPosts()]);
 
   return (
-    <SubPage settings={settings.data} back="/#blog" section="Blog">
+    <SubPage settings={settings.data} back="/" section="Blog">
       <section className="page__section page__section--intro">
         <h1 className="page__title">Blog</h1>
       </section>

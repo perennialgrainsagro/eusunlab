@@ -9,21 +9,22 @@ import {
   loadResearch,
   loadSettings,
   loadStudents,
+  newsHeading,
 } from "../lib/content.ts";
 import { listPosts } from "../lib/database.ts";
 import { formatText, plainText } from "../lib/format-text.ts";
-import { blogHref, IconLinks, paragraphs, Photo, postDate, postHref, professorHref, projectHref, splitTitle } from "./components";
+import { blogHref, IconLinks, newsHref, newsItemHref, paragraphs, Photo, postDate, postHref, professorHref, projectHref, splitTitle } from "./components";
 import { BackToTop } from "./back-to-top";
 import { LabRoot } from "./lab-root";
 import { MobileMenu } from "./mobile-menu";
 import { imageUrl } from "../lib/content-schema.ts";
 import { methodPhotoPositions, projectFacts, projectSpecies } from "./static-content";
 
-const layers = ["Surface", "Research", "Projects", "Methods", "People", "Publications", "News", "Blog", "Join us", "Contact"];
-const layerIds = ["top", "research", "projects", "methods", "people", "publications", "news", "blog", "join", "contact"];
+const layers = ["Surface", "Research", "Projects", "Methods", "People", "Publications", "Join us", "Contact"];
+const layerIds = ["top", "research", "projects", "methods", "people", "publications", "join", "contact"];
 const layerOf = (id: string) => layerIds.indexOf(id);
 const SELECTED_PUBLICATIONS = 5;
-const RECENT_POSTS = 3;
+const RECENT = 3;
 
 const pad = (index: number) => String(index + 1).padStart(2, "0");
 
@@ -33,7 +34,7 @@ function LayerLabel({ index }: { index: number }) {
 
 export default async function NewHomePage() {
   const [settingsResult, research, projects, professor, students, publications, news, posts] = await Promise.all([
-    loadSettings(), loadResearch(), loadProjects(), loadProfessor(), loadStudents(), loadPublications(), loadNews(), listPosts(false, RECENT_POSTS),
+    loadSettings(), loadResearch(), loadProjects(), loadProfessor(), loadStudents(), loadPublications(), loadNews(), listPosts(false, RECENT),
   ]);
   const settings = settingsResult.data;
   const labName = settings.lab_name || "Eusun Han Lab";
@@ -51,6 +52,11 @@ export default async function NewHomePage() {
     { src: settings.methods_photo_2_image_url, alt: settings.methods_photo_2_image_alt, caption: settings.methods_photo_2_caption },
     { src: settings.methods_photo_3_image_url, alt: settings.methods_photo_3_image_alt, caption: settings.methods_photo_3_caption },
   ].filter((photo) => photo.src);
+  // Latest News + Blog shown on the first screen.
+  const feeds = [
+    { id: "news", title: "News", href: newsHref, empty: "No news yet.", items: news.data.slice(0, RECENT).map((item) => ({ key: item.slug, href: newsItemHref(item.slug), date: formatMonth(item.month), title: newsHeading(item.title, item.content) })) },
+    { id: "blog", title: "Blog", href: blogHref, empty: "No blog posts yet.", items: posts.map((post) => ({ key: post.id, href: postHref(post.slug), date: postDate(post.published_at, "medium"), title: post.title })) },
+  ];
 
   return (
     <LabRoot>
@@ -76,18 +82,36 @@ export default async function NewHomePage() {
             </nav>
           </div>
         </div>
-        <div className="hero__main">
-          {kicker ? <div className="hero__kicker">{formatText(kicker, false)}</div> : null}
-          <h1 className="hero__title">
-            {lastSpace > 0 ? <>{labName.slice(0, lastSpace)}<br /><em>{labName.slice(lastSpace + 1)}</em></> : labName}
-          </h1>
-          {settings.introduction ? <p className="hero__intro">{formatText(settings.introduction)}</p> : null}
-          <div className="hero__picker">
-            <span className="hero__picker-label" id="crop-label">Root system shown</span>
-            <div className="hero__picker-row" role="group" aria-labelledby="crop-label">
-              <button type="button" className="pill crop-btn" data-crop="grass" aria-pressed="true">Intermediate wheatgrass · fibrous</button>
-              <button type="button" className="pill crop-btn" data-crop="silphium" aria-pressed="false">Silphium · taproot</button>
+        <div className="hero__body">
+          <div className="hero__main">
+            {kicker ? <div className="hero__kicker">{formatText(kicker, false)}</div> : null}
+            <h1 className="hero__title">
+              {lastSpace > 0 ? <>{labName.slice(0, lastSpace)}<br /><em>{labName.slice(lastSpace + 1)}</em></> : labName}
+            </h1>
+            {settings.introduction ? <p className="hero__intro">{formatText(settings.introduction)}</p> : null}
+            <div className="hero__picker">
+              <span className="hero__picker-label" id="crop-label">Root system shown</span>
+              <div className="hero__picker-row" role="group" aria-labelledby="crop-label">
+                <button type="button" className="pill crop-btn" data-crop="grass" aria-pressed="true">Intermediate wheatgrass · fibrous</button>
+                <button type="button" className="pill crop-btn" data-crop="silphium" aria-pressed="false">Silphium · taproot</button>
+              </div>
             </div>
+          </div>
+          <div className="hero__feed">
+            {feeds.map((feed) => (
+              <section className="feed" key={feed.id} aria-labelledby={`${feed.id}-title`}>
+                <div className="feed__head">
+                  <h2 className="feed__title" id={`${feed.id}-title`}>{feed.title}</h2>
+                  <Link href={feed.href}>More →</Link>
+                </div>
+                {feed.items.length ? feed.items.map((item) => (
+                  <Link className="feed__item" href={item.href} key={item.key}>
+                    <span className="feed__date">{item.date}</span>
+                    <span className="feed__name">{formatText(item.title, false)}</span>
+                  </Link>
+                )) : <p className="feed__empty">{feed.empty}</p>}
+              </section>
+            ))}
           </div>
         </div>
         <div className="hero__scroll">Scroll down into the soil</div>
@@ -237,44 +261,6 @@ export default async function NewHomePage() {
             <div className="panel-links">
               <Link href="/publications">Full publication list →</Link>
               {pi.scholar_url ? <a href={pi.scholar_url} target="_blank" rel="noopener noreferrer">Google Scholar →</a> : null}
-            </div>
-          </div>
-        </section>
-
-        <section className="layer layer--fit" data-layer={layerOf("news")} id="news" aria-labelledby="news-title">
-          <LayerLabel index={layerOf("news")} />
-          <div className="panel">
-            <h2 className="panel__title panel__title--tight" id="news-title">News</h2>
-            {news.data.map((item, index) => (
-              <div className="entry entry--news" key={index}>
-                <span className="entry__date">{formatMonth(item.month)}</span>
-                <div className="entry__body">
-                  <span className="entry__text">{formatText(item.content)}</span>
-                  {item.link_url ? (
-                    <a className="entry__more" href={item.link_url} target="_blank" rel="noopener noreferrer">{formatText(item.link_label || "Learn more", false)} →</a>
-                  ) : null}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="layer layer--fit" data-layer={layerOf("blog")} id="blog" aria-labelledby="blog-title">
-          <LayerLabel index={layerOf("blog")} />
-          <div className="panel">
-            <h2 className="panel__title panel__title--tight" id="blog-title">Blog</h2>
-            {posts.length ? posts.map((post) => (
-              <div className="entry entry--news" key={post.id}>
-                <span className="entry__date">{postDate(post.published_at, "medium")}</span>
-                <div className="entry__body">
-                  <Link className="entry__title" href={postHref(post.slug)}>{formatText(post.title, false)}</Link>
-                  {post.writer_name ? <span className="entry__meta">{formatText(post.writer_name, false)}</span> : null}
-                  {post.excerpt ? <span className="entry__text">{formatText(post.excerpt)}</span> : null}
-                </div>
-              </div>
-            )) : <p className="join__text">No blog posts yet. Check back soon.</p>}
-            <div className="panel-links">
-              <Link href={blogHref}>All posts →</Link>
             </div>
           </div>
         </section>

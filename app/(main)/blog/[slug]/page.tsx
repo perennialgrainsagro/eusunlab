@@ -18,7 +18,7 @@ export default async function NewBlogPostPage({ params }: Context) {
   if (!post) notFound();
 
   return (
-    <SubPage settings={settings.data} back="/#blog" section="Blog">
+    <SubPage settings={settings.data} back="/" section="Blog">
       <section className="page__section page__section--intro">
         <span className="page__kicker">
           {post.writer_name ? <>{formatText(post.writer_name, false)} · </> : null}

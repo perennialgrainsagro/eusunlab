@@ -2,6 +2,7 @@ import { neon, NeonDbError } from "@neondatabase/serverless";
 import type { ContentRecord, ContentTab } from "./content-schema.ts";
 import type { BlogPost, BlogInput } from "./blog.ts";
 import type { SheetRow } from "./types.ts";
+import { bodySummary } from "./format-text.ts";
 
 export function database() {
   const url = process.env.DATABASE_URL;
@@ -29,10 +30,11 @@ export async function saveContent(tab: ContentTab, rows: SheetRow[], updatedAt: 
 
 export async function listPosts(includeDrafts = false, limit?: number): Promise<BlogPost[]> {
   if (process.env.CONTENT_SOURCE === "sample" || !process.env.DATABASE_URL) return [];
-  return await database().query(
-    "SELECT id, slug, title, writer_name, excerpt, main_image_url, main_image_alt, published, published_at::text, created_at::text, updated_at::text FROM blog_posts WHERE ($1::boolean OR published) ORDER BY COALESCE(published_at, created_at) DESC LIMIT $2",
+  const posts = await database().query(
+    "SELECT id, slug, title, writer_name, excerpt, CASE WHEN excerpt = '' THEN left(body, 2000) ELSE '' END AS body, main_image_url, main_image_alt, published, published_at::text, created_at::text, updated_at::text FROM blog_posts WHERE ($1::boolean OR published) ORDER BY COALESCE(published_at, created_at) DESC LIMIT $2",
     [includeDrafts, limit ?? null],
   ) as BlogPost[];
+  return posts.map(({ body, ...post }) => ({ ...post, excerpt: post.excerpt || bodySummary(body) }) as BlogPost);
 }
 
 export async function readPost(identifier: string, includeDrafts = false): Promise<BlogPost | undefined> {

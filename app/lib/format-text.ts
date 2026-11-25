@@ -32,11 +32,24 @@ export function plainText(text: string): string {
   return text.replace(inlinePattern, (_, bold, label) => plainText(bold ?? label));
 }
 
-export function firstSentence(text: string): string {
+export function firstSentence(text: string, count = 1): string {
   const input = text.trim();
-  const sentences = new Intl.Segmenter("en", { granularity: "sentence" }).segment(plainText(input));
-  const sentence = sentences[Symbol.iterator]().next().value?.segment.trimEnd() || "";
-  return truncateInlineText(input, sentence.length);
+  const sentences = [...new Intl.Segmenter("en", { granularity: "sentence" }).segment(plainText(input))].slice(0, count);
+  return truncateInlineText(input, sentences.map(({ segment }) => segment).join("").trimEnd().length);
+}
+
+// Fallback list summary from an article's Markdown body: its first two sentences, inline bold/links kept.
+export function bodySummary(markdown: string): string {
+  const text = firstSentence(markdown
+    .replace(/```[\s\S]*?(?:```|$)/g, "\n")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+    .replace(/<\/?[a-z][^>]*>/gi, "")
+    .replace(/^ {0,3}#{1,6}\s.*$/gm, "")
+    .replace(/^\s*(?:>|[-*+]|\d+\.)\s+/gm, "")
+    .replace(/`|~~|(?<!\*)\*(?!\*)/g, "")
+    .replace(/\s+/g, " "), 2);
+  // An unpunctuated body is one long "sentence"; keep the list readable.
+  return plainText(text).length > 300 ? truncateInlineText(text, 300).trimEnd() + "…" : text;
 }
 
 function truncateInlineText(text: string, length: number): string {

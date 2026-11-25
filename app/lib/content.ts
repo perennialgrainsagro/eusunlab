@@ -25,6 +25,7 @@ import type {
 } from "./types.ts";
 import { contentUrl, DEFAULT_STUDENT_PHOTO_URL, type ContentTab } from "./content-schema.ts";
 import { makeSlug } from "./blog.ts";
+import { firstSentence } from "./format-text.ts";
 
 type GvizCell = { v?: unknown; f?: string } | null;
 type GvizPayload = {
@@ -142,6 +143,7 @@ export function normalizeSettings(rows: SheetRow[]): Settings {
 }
 
 export function normalizeNews(rows: SheetRow[]): NewsItem[] {
+  const slugs = new Set<string>();
   return visibleRows(rows)
     .sort((a, b) => {
       const order = asOrder(asText(a.display_order) || undefined) - asOrder(asText(b.display_order) || undefined);
@@ -149,13 +151,29 @@ export function normalizeNews(rows: SheetRow[]): NewsItem[] {
       const bTime = parseSheetDate(b.month)?.getTime() ?? 0;
       return order || bTime - aTime;
     })
-    .map((row) => ({
-      month: asText(row.month),
-      content: asText(row.content),
-      link_label: asText(row.link_label),
-      link_url: safeUrl(row.link_url),
-    }))
-    .filter((item) => item.content);
+    .filter((row) => asText(row.content))
+    .map((row) => {
+      const base = makeSlug(newsHeading(asText(row.title), asText(row.content))) || "news";
+      let slug = base;
+      for (let suffix = 2; slugs.has(slug); suffix++) slug = `${base}-${suffix}`;
+      slugs.add(slug);
+      return {
+        slug,
+        month: asText(row.month),
+        title: asText(row.title),
+        content: asText(row.content),
+        image_url: safeUrl(row.image_url, false),
+        image_alt: asText(row.image_alt),
+        details: asText(row.details),
+        link_label: asText(row.link_label),
+        link_url: safeUrl(row.link_url),
+      };
+    });
+}
+
+// News without a title is headed by its first sentence.
+export function newsHeading(title: string, content: string) {
+  return title || firstSentence(content);
 }
 
 export function normalizeProfessor(rows: SheetRow[]): Professor {

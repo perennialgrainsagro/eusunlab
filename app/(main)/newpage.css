@@ -123,7 +123,32 @@ body:has(.newlab) { background: #1d1915; }
 .newlab .hero > * { position: relative; z-index: 2; }
 .newlab .hero__top { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
 .newlab .hero__logo { height: 70px; width: auto; display: block; }
+/* title + latest News/Blog side by side on wide screens, stacked below that */
+.newlab .hero__body { display: flex; flex-direction: column; gap: 40px; }
 .newlab .hero__main { max-width: 620px; }
+/* stacked: the bottom margin leaves room for the plant (roots.js) to grow below the feed instead of over it */
+.newlab .hero__feed { max-width: 720px; margin-bottom: 30vh; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 28px 36px; }
+@media (min-width: 1240px) {
+  .newlab .hero__body { flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 48px; }
+  .newlab .hero__main { flex: 0 1 540px; }
+  /* right margin keeps the feed clear of the depth meter labels (fixed, right: 28px) */
+  .newlab .hero__feed { flex: 1 1 0; min-width: 0; margin: 0 calc(140px - var(--gutter)) 0 0; }
+}
+.newlab .feed { display: flex; flex-direction: column; }
+.newlab .feed__head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding-bottom: 10px; border-bottom: 1px solid rgba(31, 42, 28, .4);
+  font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+}
+.newlab .feed__title { margin: 0; font: inherit; font-weight: 700; color: var(--leaf); }
+.newlab .feed__head a { color: var(--leaf-ink); border-bottom-color: rgba(31, 42, 28, .4); }
+.newlab .feed__head a:hover { color: var(--leaf); border-bottom-color: var(--leaf); }
+.newlab .feed__item { display: block; padding: 12px 0; color: var(--leaf-ink); border-bottom: 1px solid rgba(31, 42, 28, .15); }
+.newlab .feed__item:hover { color: var(--leaf); border-bottom-color: rgba(31, 42, 28, .15); }
+.newlab .feed__date { display: block; margin-bottom: 4px; font-family: var(--mono); font-size: 11px; color: #4a5640; }
+/* block parent, not flex: Safari ignores -webkit-line-clamp on flex items */
+.newlab .feed__name { font-family: var(--serif); font-size: 17px; line-height: 1.3; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.newlab .feed__empty { margin: 12px 0 0; font-size: 14px; color: #4a5640; }
 .newlab .hero__kicker {
   font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
   color: var(--leaf); margin-bottom: 20px;
@@ -159,8 +184,6 @@ body:has(.newlab) { background: #1d1915; }
 }
 .newlab .layer { position: relative; min-height: 100vh; padding: 16vh 0 12vh; box-sizing: border-box; }
 .newlab .layer--short { min-height: 90vh; }
-/* height follows the content (Blog: a few posts shouldn't fill a whole screen) */
-.newlab .layer--fit { min-height: 0; padding: 12vh 0 10vh; }
 .newlab .layer__label {
   position: absolute; left: 0; right: 0; top: 0; z-index: 4;
   padding: 10px var(--gutter);
@@ -262,17 +285,12 @@ body:has(.newlab) { background: #1d1915; }
 /* ---------- publications & news ---------- */
 
 .newlab .entry { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 14px; border-top: 1px solid var(--line-strong); padding-top: 16px; }
-.newlab .entry--news { grid-template-columns: 80px minmax(0, 1fr); }
 .newlab .entry__date { font-family: var(--mono); font-size: 12px; color: var(--gold); }
 .newlab .entry__body { display: flex; flex-direction: column; gap: 6px; }
-.newlab .entry--news .entry__body { gap: 8px; }
 .newlab .entry__title { align-self: flex-start; font-family: var(--serif); font-size: 20px; line-height: 1.25; }
 .newlab a.entry__title { color: var(--ink); border-bottom-color: rgba(242, 234, 217, .25); }
 .newlab a.entry__title:hover { color: var(--gold-hi); }
 .newlab .entry__meta { font-size: 13px; line-height: 1.5; color: var(--ink-muted); }
-.newlab .entry__text { font-size: 16px; line-height: 1.5; }
-.newlab .entry__text strong { font-weight: 500; }
-.newlab .entry__more { align-self: flex-start; font-size: 14px; }
 .newlab .panel-links { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 6px; }
 .newlab .panel-links a { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
 
